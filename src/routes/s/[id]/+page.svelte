@@ -40,21 +40,18 @@
 	});
 
 	function handleCopy() {
-		const selection = window.getSelection();
-		const range = document.createRange();
-		const textarea = document.getElementById('textarea-data');
-		if (textarea) {
-			range.selectNodeContents(textarea);
-			selection?.removeAllRanges();
-			selection?.addRange(range);
-			setTimeout(() => {
-				selection?.removeAllRanges();
-			}, 100);
-		}
+		const textarea = document.getElementById('textarea-data') as HTMLTextAreaElement;
 
 		navigator.clipboard.writeText(data ?? '').catch((err) => {
 			console.error('Failed to copy to clipboard', err);
 		});
+
+		if (textarea) {
+			textarea.select();
+			setTimeout(() => {
+				window.getSelection()?.removeAllRanges();
+			}, 150);
+		}
 	}
 </script>
 

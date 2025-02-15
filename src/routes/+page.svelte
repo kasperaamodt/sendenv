@@ -52,6 +52,10 @@
 	}
 
 	function handleCopy() {
+		navigator.clipboard.writeText(share_url ?? '').catch((err) => {
+			console.error('Failed to copy to clipboard', err);
+		});
+
 		const selection = window.getSelection();
 		const range = document.createRange();
 		const button = document.getElementById('share-url');
@@ -63,10 +67,6 @@
 				selection?.removeAllRanges();
 			}, 100);
 		}
-
-		navigator.clipboard.writeText(share_url ?? '').catch((err) => {
-			console.error('Failed to copy to clipboard', err);
-		});
 	}
 </script>
 
