@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { decrypt_content } from '$lib/encryption';
+	import Button from '$ui/button.svelte';
+	import Field from '$ui/field.svelte';
+	import Label from '$ui/label.svelte';
 	import { onMount } from 'svelte';
 
 	const content_id = page.params.id;
@@ -8,7 +11,6 @@
 	let data = $state<string | null>(null);
 	let error = $state<string | null>(null);
 	let loading = $state<boolean>(true);
-	let is_copied = $state<boolean>(false);
 
 	onMount(async () => {
 		try {
@@ -38,13 +40,21 @@
 	});
 
 	function handleCopy() {
+		const selection = window.getSelection();
+		const range = document.createRange();
+		const textarea = document.getElementById('textarea-data');
+		if (textarea) {
+			range.selectNodeContents(textarea);
+			selection?.removeAllRanges();
+			selection?.addRange(range);
+			setTimeout(() => {
+				selection?.removeAllRanges();
+			}, 100);
+		}
+
 		navigator.clipboard.writeText(data ?? '').catch((err) => {
 			console.error('Failed to copy to clipboard', err);
 		});
-		is_copied = true;
-		setTimeout(() => {
-			is_copied = false;
-		}, 2000);
 	}
 </script>
 
@@ -76,51 +86,21 @@
 	{:else if error}
 		<span class="text-red-500">{error}</span>
 	{:else}
-		<div class="rounded-md bg-black">
-			<div class="flex items-center justify-between p-2">
-				<span class="text-xs text-gray-300"> Shared secret: </span>
-				<button
-					class="flex cursor-pointer items-center gap-1 text-gray-200"
-					onclick={handleCopy}
-					aria-label="Copy"
-				>
-					{#if is_copied}
-						<svg
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="size-3"><path d="M20 6 9 17l-5-5" /></svg
-						>
-					{:else}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="size-3"
-							><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path
-								d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
-							/></svg
-						>
-					{/if}
-					<span class="text-xs">Copy</span>
-				</button>
-			</div>
+		<Field>
+			<Label>Shared secret</Label>
 			<textarea
-				readonly
+				id="textarea-data"
 				rows={10}
-				class="m-0 w-full rounded-md bg-[rgb(40,44,52)] p-4 text-base text-white">{data}</textarea
-			>
+				readonly
+				class="w-full rounded-md border border-gray-200 p-2 text-base hover:cursor-copy"
+				onclick={handleCopy}
+				title="Click to copy"
+				value={data}
+			></textarea>
+		</Field>
+
+		<div class="flex justify-end">
+			<Button type="button" onclick={handleCopy}>Copy secret</Button>
 		</div>
 	{/if}
 </div>

@@ -5,7 +5,8 @@ import { z } from 'zod';
 
 const validator = z.object({
 	content_id: z.string(),
-	data: z.string()
+	data: z.string(),
+	expiration: z.number().default(1)
 });
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -20,12 +21,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		});
 	}
 
-	const { content_id, data } = valid_data;
+	const { content_id, data, expiration } = valid_data;
 
 	const [insert] = await db.insert(secrets).values({
 		content_id,
 		data,
-		expires_at: new Date(Date.now() + 60 * 60 * 1000)
+		expires_at: new Date(Date.now() + 60 * 60 * expiration * 1000)
 	});
 
 	if (insert.affectedRows === 0) {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Header from '$components/header.svelte';
 	import '../app.css';
+	import '../fixes.css';
 
 	let { children } = $props();
 </script>
