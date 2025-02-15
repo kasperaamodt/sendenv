@@ -50,10 +50,6 @@
 			is_copied = false;
 		}, 2000);
 	}
-
-	function handleReset() {
-		share_url = null;
-	}
 </script>
 
 <div class="space-y-6">
@@ -119,12 +115,8 @@
 				</button>
 			</div>
 			<pre
-				class="overflow-y-scroll rounded-md bg-[rgb(40,44,52);] p-4 text-sm text-white [&::-webkit-scrollbar]:h-1.5
-                [&::-webkit-scrollbar]:w-1"><code>{share_url}</code></pre>
-		</div>
-
-		<div class="mt-2 flex justify-end">
-			<Button type="button" onclick={handleReset}>New secret</Button>
+				class="overflow-y-scroll rounded-md bg-[rgb(40,44,52)] p-4 text-sm text-white [&::-webkit-scrollbar]:h-1.5
+                [&::-webkit-scrollbar]:w-1">{share_url}</pre>
 		</div>
 	{/if}
 </div>

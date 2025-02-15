@@ -4,4 +4,4 @@
 	const props: Omit<HTMLTextareaAttributes, 'class'> = $props();
 </script>
 
-<textarea {...props} class="w-full rounded-md border border-gray-200 p-2"></textarea>
+<textarea {...props} class="w-full rounded-md border border-gray-200 p-2 text-base"></textarea>
