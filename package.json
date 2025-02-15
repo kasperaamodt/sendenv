@@ -12,31 +12,36 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
-		"db:push": "drizzle-kit push",
+		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
-		"@eslint/compat": "^1.2.5",
-		"@eslint/js": "^9.18.0",
-		"@sveltejs/adapter-vercel": "^5.5.2",
-		"@sveltejs/kit": "^2.16.0",
-		"@sveltejs/vite-plugin-svelte": "^5.0.0",
-		"drizzle-kit": "^0.30.2",
-		"eslint": "^9.18.0",
+		"@eslint/compat": "^1.2.6",
+		"@eslint/js": "^9.20.0",
+		"@sveltejs/adapter-vercel": "^5.6.2",
+		"@sveltejs/kit": "^2.17.2",
+		"@sveltejs/vite-plugin-svelte": "^5.0.3",
+		"@tailwindcss/vite": "^4.0.6",
+		"@types/node": "^22.13.4",
+		"drizzle-kit": "^0.30.4",
+		"eslint": "^9.20.1",
 		"eslint-config-prettier": "^10.0.1",
 		"eslint-plugin-svelte": "^2.46.1",
-		"globals": "^15.14.0",
-		"prettier": "^3.4.2",
+		"globals": "^15.15.0",
+		"prettier": "^3.5.1",
 		"prettier-plugin-svelte": "^3.3.3",
-		"svelte": "^5.0.0",
-		"svelte-check": "^4.0.0",
-		"typescript": "^5.0.0",
-		"typescript-eslint": "^8.20.0",
-		"vite": "^6.0.0"
+		"prettier-plugin-tailwindcss": "^0.6.11",
+		"svelte": "^5.20.1",
+		"svelte-check": "^4.1.4",
+		"tailwindcss": "^4.0.6",
+		"typescript": "^5.7.3",
+		"typescript-eslint": "^8.24.0",
+		"vite": "^6.1.0"
 	},
 	"dependencies": {
-		"@planetscale/database": "^1.19.0",
-		"drizzle-orm": "^0.38.4"
+		"drizzle-orm": "^0.39.3",
+		"mysql2": "^3.12.0",
+		"zod": "^3.24.2"
 	}
 }
