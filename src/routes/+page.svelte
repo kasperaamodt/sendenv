@@ -71,7 +71,7 @@
 
 			<div class="mt-2 flex justify-end">
 				<Button type="submit" disabled={loading}>
-					{loading ? 'Encrypting...' : 'Create Share Link'}
+					{loading ? 'Encrypting...' : 'Generate link'}
 				</Button>
 			</div>
 		</form>
