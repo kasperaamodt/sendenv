@@ -1,6 +1,8 @@
 import { db } from '$lib/db';
 import { secrets } from '$lib/db/schema';
+import { ratelimiter } from '$lib/valkey';
 import type { RequestHandler } from '@sveltejs/kit';
+import { hash } from 'crypto';
 import { z } from 'zod';
 
 const validator = z.object({
@@ -10,6 +12,27 @@ const validator = z.object({
 });
 
 export const POST: RequestHandler = async ({ request }) => {
+	const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+
+	const {
+		success: limit_success,
+		remaining,
+		reset,
+		retry_after
+	} = await ratelimiter.limit(hash('sha256', ip));
+
+	if (!limit_success) {
+		return new Response('Too many requests', {
+			status: 429,
+			headers: {
+				'X-RateLimit-Limit': '5',
+				'X-RateLimit-Remaining': remaining.toString(),
+				'X-RateLimit-Reset': reset.toString(),
+				'Retry-After': Math.ceil(retry_after / 1000).toString()
+			}
+		});
+	}
+
 	const { data: valid_data, success } = validator.safeParse(await request.json());
 
 	if (!success) {
