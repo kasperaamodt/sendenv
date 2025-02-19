@@ -3,7 +3,9 @@
 </script>
 
 <header class="mx-auto flex max-w-3xl items-center justify-between px-4 py-2">
-	<a href="/" class="text-xl font-semibold">Send env</a>
+	<a href="/" class="text-xl font-semibold">
+		<img src="/logo.svg" alt="Send env" class="h-auto w-32" />
+	</a>
 
 	<nav class="flex items-center gap-3">
 		<a

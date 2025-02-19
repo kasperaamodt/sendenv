@@ -16,6 +16,6 @@
 </head:svelte>
 
 <Header />
-<div class="mx-auto max-w-3xl p-4">
+<div class="mx-auto mt-2 max-w-3xl p-4">
 	{@render children()}
 </div>
