@@ -1,6 +1,6 @@
-# Send env
+# Sendenv
 
-Send env is a secure, end-to-end encrypted service for sharing sensitive information. Perfect for sharing environment variables, API keys, or other secrets securely.
+Sendenv is a secure, end-to-end encrypted service for sharing sensitive information. Perfect for sharing environment variables, API keys, or other secrets securely.
 
 ## How it Works
 
