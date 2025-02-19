@@ -12,7 +12,7 @@
 			href="https://twitter.com/kasperaamodt"
 			target="_blank"
 			rel="noreferrer"
-			aria-label="GitHub repo"
+			aria-label="Twitter kasperaamodt"
 		>
 			<svg
 				xmlns="http://www.w3.org/2000/svg"
