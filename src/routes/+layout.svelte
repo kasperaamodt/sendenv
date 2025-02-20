@@ -12,7 +12,6 @@
 		name="description"
 		content="Securely share sensitive info with Sendenv. End-to-end encrypted for sharing env vars, API keys, and secrets."
 	/>
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<meta name="og:title" content="Sendenv" />
 	<meta
 		name="og:description"
