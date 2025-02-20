@@ -70,6 +70,13 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Sendenv</title>
+	<meta name="og:title" content="Sendenv" />
+	<meta property="og:url" content="https://sendenv.app" />
+	<meta name="twitter:title" content="Sendenv" />
+</svelte:head>
+
 <div class="space-y-6">
 	<div>
 		<h1 class="text-2xl font-medium">Send secrets securely to anyone</h1>

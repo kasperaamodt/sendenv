@@ -55,6 +55,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Someone shared a secret with you - Sendenv</title>
+	<meta name="robots" content="noindex" />
+</svelte:head>
+
 <div class="space-y-6">
 	<div>
 		<h1 class="text-2xl font-medium">Someone shared a secret with you</h1>
