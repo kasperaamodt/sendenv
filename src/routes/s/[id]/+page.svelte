@@ -57,6 +57,8 @@
 
 <svelte:head>
 	<title>Someone shared a secret with you - Sendenv</title>
+	<meta name="og:title" content="Someone shared a secret with you - Sendenv" />
+	<meta name="twitter:title" content="Someone shared a secret with you - Sendenv" />
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
