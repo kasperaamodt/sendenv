@@ -18,17 +18,17 @@
 		name="og:description"
 		content="Securely share sensitive info with Sendenv. End-to-end encrypted for sharing env vars, API keys, and secrets."
 	/>
-	<meta name="og:image" content="https://sendenv.dev/og.png" />
+	<meta name="og:image" content="https://sendenv.app/og.png" />
 	<meta name="twitter:card" content="summary_large_image" />
 	<meta name="twitter:title" content="Sendenv" />
 	<meta
 		name="twitter:description"
 		content="Securely share sensitive info with Sendenv. End-to-end encrypted for sharing env vars, API keys, and secrets."
 	/>
-	<meta name="twitter:image" content="https://sendenv.dev/og.png" />
+	<meta name="twitter:image" content="https://sendenv.app/og.png" />
 	<meta name="twitter:image:alt" content="Sendenv logo" />
 	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://sendenv.dev" />
+	<meta property="og:url" content="https://sendenv.app" />
 	<meta property="og:site_name" content="Sendenv" />
 </head:svelte>
 
