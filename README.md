@@ -40,7 +40,7 @@ bun install
 bun dev
 
 # Build for production
-npm run build
+bun run build
 ```
 
 ## Contributing
