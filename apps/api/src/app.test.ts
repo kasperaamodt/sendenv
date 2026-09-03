@@ -260,7 +260,7 @@ describe('Sendenv API', () => {
 
 	test('reports dependency failures through readiness', async () => {
 		const { api } = setup(unlimitedRateLimiter, 0, async () => {
-			throw new Error('Valkey unavailable');
+			throw new Error('Redis unavailable');
 		});
 		const response = await api.handle(new Request('http://localhost/health'));
 

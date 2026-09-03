@@ -6,8 +6,8 @@
 		"DATABASE_URL",
 		"HOST",
 		"PORT",
-		"TRUST_PROXY_HOPS",
-		"VALKEY_URL"
+		"REDIS_URL",
+		"TRUST_PROXY_HOPS"
 	],
 	"tasks": {
 		"build": {

@@ -1,6 +1,6 @@
 import { createApi } from './app.ts';
 import { checkDatabase, closeDatabase } from './db/index.ts';
-import { checkValkey, closeValkey, rateLimiter } from './infra/valkey.ts';
+import { check_redis, close_redis, rate_limiter } from './infra/redis.ts';
 import { secretStore } from './modules/secrets/store.ts';
 
 const parsedProxyHops = Number.parseInt(process.env.TRUST_PROXY_HOPS ?? '0', 10);
@@ -12,11 +12,11 @@ const allowedOrigins = (process.env.CORS_ORIGINS ?? '')
 	.filter(Boolean);
 const app = createApi({
 	store: secretStore,
-	rateLimiter,
+	rateLimiter: rate_limiter,
 	trustedProxyHops,
 	allowedOrigins,
 	healthCheck: async () => {
-		await Promise.all([checkDatabase(), checkValkey()]);
+		await Promise.all([checkDatabase(), check_redis()]);
 	}
 });
 const port = Number(process.env.PORT ?? 3000);
@@ -65,7 +65,7 @@ async function shutdown() {
 	await server.stop();
 	await cleanupInFlight;
 	await closeDatabase();
-	closeValkey();
+	close_redis();
 }
 
 process.once('SIGINT', () => void shutdown());
