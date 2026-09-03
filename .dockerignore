@@ -1,6 +1,4 @@
 node_modules
-build
-.svelte-kit
 .env
 .env.*
 *.log
@@ -9,4 +7,3 @@ build
 .dockerignore
 Dockerfile
 README.md
-

@@ -2,4 +2,10 @@
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+bun.lock
 drizzle
+
+# Generated output
+.svelte-kit
+build
+.vercel

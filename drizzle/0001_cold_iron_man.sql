@@ -1,7 +1,9 @@
+DROP TABLE IF EXISTS `secrets`;--> statement-breakpoint
 CREATE TABLE `secrets` (
 	`id` bigint AUTO_INCREMENT NOT NULL,
-	`content_id` varchar(12) NOT NULL,
+	`content_id` varchar(32) NOT NULL,
 	`data` text NOT NULL,
+	`access_verifier` binary(32) NOT NULL,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`expires_at` timestamp NOT NULL,
 	`accessed` boolean NOT NULL DEFAULT false,
