@@ -14,7 +14,7 @@ This is a Bun workspace orchestrated by Turborepo.
 
 ```text
 apps/
-  api/          Elysia API, OpenAPI, Drizzle, MySQL and Valkey
+  api/          Elysia API, OpenAPI, Drizzle, MySQL and Redis
   sendenv/      Developer-focused Remix frontend
   hvisk/        Norwegian consumer-facing Remix frontend
 packages/
@@ -139,7 +139,7 @@ Create five resources:
 | Resource | Dockerfile                | Port   | Health check |
 | -------- | ------------------------- | ------ | ------------ |
 | MySQL    | Managed service           | MySQL  | Managed      |
-| Valkey   | Managed service           | Valkey | Managed      |
+| Redis    | Managed service           | Redis  | Managed      |
 | API      | `apps/api/Dockerfile`     | `3000` | `/health`    |
 | Sendenv  | `apps/sendenv/Dockerfile` | `3000` | `/health`    |
 | Hvisk    | `apps/hvisk/Dockerfile`   | `3000` | `/health`    |
@@ -150,7 +150,7 @@ API environment:
 
 ```text
 DATABASE_URL=mysql://...
-VALKEY_URL=redis://...
+REDIS_URL=redis://...
 TRUST_PROXY_HOPS=1
 CORS_ORIGINS=https://sendenv.app,https://www.sendenv.app,https://hvisk.no,https://www.hvisk.no
 ```
@@ -163,7 +163,7 @@ API_URL=https://api.sendenv.app
 
 The API container applies Drizzle migrations under a MySQL advisory lock before starting. Leave
 Coolify pre-deployment, post-deployment and start-command overrides empty. Frontend containers do
-not receive database or Valkey credentials.
+not receive database or Redis credentials.
 
 All production images include `curl` because Coolify executes its health check inside the
 container.
