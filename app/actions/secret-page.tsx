@@ -9,7 +9,7 @@ interface SecretPageProps {
 
 export function SecretPage(handle: Handle<SecretPageProps>) {
 	return () => (
-		<Document title="Someone shared a secret with you - Sendenv" noIndex>
+		<Document title="Someone shared a secret with you - Sendenv" noIndex showNewSecret>
 			<div class="stack">
 				<section>
 					<h1>Someone shared a secret with you</h1>

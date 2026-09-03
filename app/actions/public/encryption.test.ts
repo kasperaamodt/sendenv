@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 
+import { MAX_ENCRYPTED_SECRET_LENGTH } from '../../lib/secret-size.ts';
 import { decrypt_content, encrypt_content, get_access_token } from './encryption.ts';
 
 describe('browser encryption', () => {
@@ -34,6 +35,14 @@ describe('browser encryption', () => {
 		expect(await decrypt_content(encrypted.encrypted_data, encrypted.key, encrypted.id)).toBe(
 			plaintext
 		);
+	});
+
+	test('keeps the maximum client-accepted secret within the stored payload limit', async () => {
+		const atLimit = await encrypt_content('a'.repeat(49_121));
+		const overLimit = await encrypt_content('a'.repeat(49_122));
+
+		expect(atLimit.encrypted_data).toHaveLength(MAX_ENCRYPTED_SECRET_LENGTH);
+		expect(overLimit.encrypted_data.length).toBeGreaterThan(MAX_ENCRYPTED_SECRET_LENGTH);
 	});
 
 	test('binds ciphertext to both its key and content ID', async () => {

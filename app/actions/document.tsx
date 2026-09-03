@@ -1,6 +1,6 @@
 import type { Handle, RemixNode } from 'remix/ui';
 
-import { entryHref, entryPreloads, stylesheetHref } from '../assets.ts';
+import { entryHref, stylesheetHref } from '../assets.ts';
 import { Header } from './header.tsx';
 
 const description =
@@ -10,11 +10,12 @@ interface DocumentProps {
 	children?: RemixNode;
 	title: string;
 	noIndex?: boolean;
+	showNewSecret?: boolean;
 }
 
 export function Document(handle: Handle<DocumentProps>) {
 	return () => {
-		const { children, noIndex = false, title } = handle.props;
+		const { children, noIndex = false, showNewSecret = false, title } = handle.props;
 
 		return (
 			<html lang="en">
@@ -36,14 +37,11 @@ export function Document(handle: Handle<DocumentProps>) {
 					<title>{title}</title>
 					<link rel="icon" href="/favicon.ico" />
 					<link rel="stylesheet" href={stylesheetHref} />
-					{entryPreloads.map((href) => (
-						<link key={href} rel="modulepreload" href={href} />
-					))}
-					<script type="module" src={entryHref}></script>
 				</head>
 				<body>
-					<Header />
+					<Header showNewSecret={showNewSecret} />
 					<main class="page-shell">{children}</main>
+					<script type="module" src={entryHref}></script>
 				</body>
 			</html>
 		);

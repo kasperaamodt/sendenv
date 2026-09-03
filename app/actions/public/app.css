@@ -91,7 +91,7 @@ a {
 
 .stack {
 	display: grid;
-	gap: 1.5rem;
+	gap: 2rem;
 }
 
 .stack-small {
@@ -124,8 +124,7 @@ h1 {
 }
 
 .text-area,
-.select,
-.share-link {
+.select {
 	width: 100%;
 	border: 1px solid #e5e7eb;
 	border-radius: 0.375rem;
@@ -153,13 +152,21 @@ h1 {
 
 .share-link {
 	display: block;
-	padding: 0.625rem;
+	color: #374151;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.9375rem;
+	line-height: 1.5;
 	overflow-wrap: anywhere;
-	text-align: left;
+	user-select: text;
 }
 
-.copyable {
-	cursor: copy;
+.share-result {
+	display: grid;
+	gap: 1rem;
+}
+
+.share-result .actions {
+	margin-top: 0.5rem;
 }
 
 .text-area:focus,
@@ -238,8 +245,13 @@ h1 {
 
 .warning {
 	margin: 0;
-	color: #92400e;
+	color: #4b5563;
 	font-size: 0.875rem;
+	line-height: 1.5;
+}
+
+.warning strong {
+	color: #111827;
 }
 
 .sr-only {
