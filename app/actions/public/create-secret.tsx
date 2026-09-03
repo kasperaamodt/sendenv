@@ -40,15 +40,13 @@ export const CreateSecret = clientEntry(
 							<label htmlFor="share-url">
 								Your share link (expires in {expiration} hour{expiration > 1 ? 's' : ''})
 							</label>
-							<button
-								id="share-url"
-								type="button"
-								class="share-link"
-								title="Click to copy"
-								mix={on('click', copyShareUrl)}
-							>
+							<output id="share-url" class="share-link">
 								{shareUrl}
-							</button>
+							</output>
+							<p class="warning">
+								<strong>Do not open this link yourself.</strong> The first person to open it
+								consumes the secret, and it cannot be viewed again.
+							</p>
 						</div>
 
 						{error ? (
