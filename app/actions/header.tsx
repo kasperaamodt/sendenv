@@ -1,4 +1,10 @@
-export function Header() {
+import type { Handle } from 'remix/ui';
+
+interface HeaderProps {
+	showNewSecret?: boolean;
+}
+
+export function Header(handle: Handle<HeaderProps>) {
 	return () => (
 		<header class="site-header">
 			<a href="/" class="logo-link">
@@ -29,9 +35,11 @@ export function Header() {
 						<path d="M9 18c-4.51 2-5-2-7-2" />
 					</svg>
 				</a>
-				<a href="/" class="button button-primary">
-					New secret
-				</a>
+				{handle.props.showNewSecret ? (
+					<a href="/" class="button button-primary">
+						New secret
+					</a>
+				) : null}
 			</nav>
 		</header>
 	);

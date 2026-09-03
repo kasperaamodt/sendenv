@@ -8,6 +8,7 @@ import {
 } from '../actions/public/encryption.ts';
 import type { NewSecret, SecretStore } from './secret-store.ts';
 import { createSecretsApi, type RateLimiter } from './secrets-api.ts';
+import { MAX_ENCRYPTED_SECRET_LENGTH, SECRET_TOO_LARGE_MESSAGE } from './secret-size.ts';
 
 const fixedNow = new Date('2026-09-03T12:00:00.000Z');
 const contentId = 'abcdef123456abcdef123456abcdef12';
@@ -130,6 +131,25 @@ describe('secrets API', () => {
 
 		expect(malformed.status).toBe(400);
 		expect(invalid.status).toBe(400);
+		expect(store.secrets.size).toBe(0);
+	});
+
+	test('returns a clear error when a secret is too large', async () => {
+		const { api, store } = setup();
+		const oversizedPayload = await api.create(
+			createRequest({
+				...validCreateBody,
+				data: `v2.${'A'.repeat(MAX_ENCRYPTED_SECRET_LENGTH - 2)}`
+			})
+		);
+		const oversizedRequest = await api.create(
+			createRequest({ ...validCreateBody, data: `v2.${'A'.repeat(70_000)}` })
+		);
+
+		for (const response of [oversizedPayload, oversizedRequest]) {
+			expect(response.status).toBe(413);
+			expect(await response.text()).toBe(SECRET_TOO_LARGE_MESSAGE);
+		}
 		expect(store.secrets.size).toBe(0);
 	});
 

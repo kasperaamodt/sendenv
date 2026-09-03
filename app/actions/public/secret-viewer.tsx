@@ -1,4 +1,4 @@
-import { clientEntry, on, ref, type Handle, type SerializableProps } from 'remix/ui';
+import { clientEntry, on, type Handle, type SerializableProps } from 'remix/ui';
 
 import { decrypt_content, get_access_token, is_valid_key_fragment } from './encryption.ts';
 
@@ -13,7 +13,6 @@ export const SecretViewer = clientEntry(
 		let data: string | null = null;
 		let error: string | null = null;
 		let loading = true;
-		let textarea: HTMLTextAreaElement | undefined;
 
 		handle.queueTask(async (signal) => {
 			try {
@@ -55,7 +54,6 @@ export const SecretViewer = clientEntry(
 
 			try {
 				await navigator.clipboard.writeText(data);
-				textarea?.select();
 				copied = true;
 				error = null;
 			} catch {
@@ -84,15 +82,8 @@ export const SecretViewer = clientEntry(
 								id="secret-output"
 								rows={10}
 								readOnly
-								class="text-area copyable"
-								title="Click to copy"
+								class="text-area"
 								value={data ?? ''}
-								mix={[
-									ref((element) => {
-										textarea = element;
-									}),
-									on('click', copySecret)
-								]}
 							></textarea>
 						</div>
 

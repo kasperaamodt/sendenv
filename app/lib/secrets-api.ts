@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { z } from 'zod';
 
 import type { SecretStore } from './secret-store.ts';
+import { MAX_ENCRYPTED_SECRET_LENGTH, SECRET_TOO_LARGE_MESSAGE } from './secret-size.ts';
 
 const MAX_REQUEST_BYTES = 70_000;
 const allowedExpirations = [1, 3, 6, 12, 24] as const;
@@ -12,7 +13,7 @@ export const createSecretSchema = z.object({
 	data: z
 		.string()
 		.regex(/^v2\.[A-Za-z0-9_-]+$/)
-		.max(65_535),
+		.max(MAX_ENCRYPTED_SECRET_LENGTH),
 	access_verifier: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
 	expiration: z.number().refine((value) => allowedExpirations.includes(value as never))
 });
@@ -50,18 +51,28 @@ export function createSecretsApi({
 
 			const contentLength = Number(request.headers.get('content-length') ?? 0);
 			if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
-				return new Response('Request body too large', { status: 413 });
+				return secretTooLargeResponse();
 			}
 
 			let body: unknown;
 			try {
 				const text = await request.text();
 				if (new TextEncoder().encode(text).byteLength > MAX_REQUEST_BYTES) {
-					return new Response('Request body too large', { status: 413 });
+					return secretTooLargeResponse();
 				}
 				body = JSON.parse(text);
 			} catch {
 				return json({ error: 'Malformed JSON' }, 400);
+			}
+
+			if (
+				typeof body === 'object' &&
+				body !== null &&
+				'data' in body &&
+				typeof body.data === 'string' &&
+				body.data.length > MAX_ENCRYPTED_SECRET_LENGTH
+			) {
+				return secretTooLargeResponse();
 			}
 
 			const parsed = createSecretSchema.safeParse(body);
@@ -155,6 +166,10 @@ function json(body: unknown, status: number): Response {
 		status,
 		headers: noStoreHeaders()
 	});
+}
+
+function secretTooLargeResponse(): Response {
+	return new Response(SECRET_TOO_LARGE_MESSAGE, { status: 413, headers: noStoreHeaders() });
 }
 
 function noStoreHeaders(): Record<string, string> {

@@ -1,5 +1,10 @@
-import { clientEntry, on, ref, type Handle, type SerializableProps } from 'remix/ui';
+import { clientEntry, on, type Handle, type SerializableProps } from 'remix/ui';
 
+import {
+	getSecretByteLength,
+	MAX_SECRET_BYTES,
+	SECRET_TOO_LARGE_MESSAGE
+} from '../../lib/secret-size.ts';
 import { encrypt_content } from './encryption.ts';
 
 export const CreateSecret = clientEntry(
@@ -11,7 +16,6 @@ export const CreateSecret = clientEntry(
 		let hydrated = false;
 		let loading = false;
 		let shareUrl: string | null = null;
-		let textarea: HTMLTextAreaElement | undefined;
 
 		handle.queueTask(() => {
 			hydrated = true;
@@ -35,7 +39,7 @@ export const CreateSecret = clientEntry(
 		return () => (
 			<section aria-label="Create a secret">
 				{shareUrl ? (
-					<div class="stack-small">
+					<div class="share-result">
 						<div class="field">
 							<label htmlFor="share-url">
 								Your share link (expires in {expiration} hour{expiration > 1 ? 's' : ''})
@@ -43,11 +47,11 @@ export const CreateSecret = clientEntry(
 							<output id="share-url" class="share-link">
 								{shareUrl}
 							</output>
-							<p class="warning">
-								<strong>Do not open this link yourself.</strong> The first person to open it
-								consumes the secret, and it cannot be viewed again.
-							</p>
 						</div>
+						<p class="warning">
+							<strong>Do not open this link yourself.</strong> The first person to open it consumes
+							the secret, and it cannot be viewed again.
+						</p>
 
 						{error ? (
 							<p class="error" role="alert">
@@ -80,14 +84,21 @@ export const CreateSecret = clientEntry(
 						autoComplete="off"
 						mix={on('submit', async (event, signal) => {
 							event.preventDefault();
-							if (!hydrated || loading || !textarea) return;
+							if (!hydrated || loading) return;
 
-							const data = textarea.value;
 							const formData = new FormData(event.currentTarget);
+							const data = formData.get('data');
 							const selectedExpiration = Number(formData.get('expiration') ?? 1);
 
-							if (!data.trim()) {
+							if (typeof data !== 'string' || !data.trim()) {
 								error = 'Please enter some text.';
+								handle.update();
+								return;
+							}
+
+							const secretBytes = getSecretByteLength(data);
+							if (secretBytes > MAX_SECRET_BYTES) {
+								error = SECRET_TOO_LARGE_MESSAGE;
 								handle.update();
 								return;
 							}
@@ -135,12 +146,10 @@ export const CreateSecret = clientEntry(
 						</label>
 						<textarea
 							id="secret-data"
+							name="data"
 							class="text-area"
 							placeholder="Enter your secret content here..."
 							rows={6}
-							mix={ref((element) => {
-								textarea = element;
-							})}
 						></textarea>
 
 						{error ? (
