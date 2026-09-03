@@ -152,10 +152,10 @@ h1 {
 }
 
 .share-link {
+	display: block;
 	padding: 0.625rem;
 	overflow-wrap: anywhere;
 	text-align: left;
-	cursor: copy;
 }
 
 .copyable {
@@ -164,7 +164,6 @@ h1 {
 
 .text-area:focus,
 .select:focus,
-.share-link:focus-visible,
 .button:focus-visible,
 .icon-link:focus-visible {
 	outline: 2px solid #111827;
@@ -235,6 +234,12 @@ h1 {
 	color: #dc2626;
 	font-size: 0.875rem;
 	white-space: pre-wrap;
+}
+
+.warning {
+	margin: 0;
+	color: #92400e;
+	font-size: 0.875rem;
 }
 
 .sr-only {
