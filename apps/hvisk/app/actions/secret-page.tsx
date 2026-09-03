@@ -17,7 +17,8 @@ export function SecretPage(handle: Handle<SecretPageProps>) {
 				<section>
 					<h1>Noen har delt noe privat med deg</h1>
 					<p class="lede">
-						Denne lenken virker bare én gang. Ta vare på det du trenger før du lukker siden.
+						Innholdet kan bare vises én gang. Trykk Vis innholdet når du er klar, og ta vare på det
+						du trenger før du lukker siden.
 					</p>
 				</section>
 
@@ -26,6 +27,12 @@ export function SecretPage(handle: Handle<SecretPageProps>) {
 					contentId={handle.props.contentId}
 					messages={secret_viewer_messages}
 				/>
+
+				<div class="actions">
+					<a href="/" class="button button-secondary">
+						Del noe nytt
+					</a>
+				</div>
 			</div>
 		</Document>
 	);

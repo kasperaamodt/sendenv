@@ -60,12 +60,15 @@ a {
 .logo-link {
 	display: inline-flex;
 	align-items: center;
+	cursor: pointer;
 }
 
 .logo {
 	display: block;
 	width: auto;
 	height: 1.875rem;
+	pointer-events: none;
+	user-select: none;
 }
 
 .site-nav {

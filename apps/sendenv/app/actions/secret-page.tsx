@@ -21,8 +21,8 @@ export function SecretPage(handle: Handle<SecretPageProps>) {
 				<section>
 					<h1>Someone shared a secret with you</h1>
 					<p class="lede">
-						This secret can only be opened once. Save any information you need before closing this
-						page.
+						This secret can only be revealed once. Select Reveal secret when you are ready, then
+						save any information you need before closing this page.
 					</p>
 				</section>
 
@@ -31,6 +31,12 @@ export function SecretPage(handle: Handle<SecretPageProps>) {
 					contentId={handle.props.contentId}
 					messages={secret_viewer_messages}
 				/>
+
+				<div class="actions">
+					<a href="/" class="button button-secondary">
+						Create a new secret
+					</a>
+				</div>
 			</div>
 		</Document>
 	);

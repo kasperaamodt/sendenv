@@ -24,8 +24,8 @@ export const create_secret_messages = {
 	secret_label: 'Innhold du vil dele',
 	secret_placeholder: 'Skriv eller lim inn det du vil dele …',
 	secret_too_large: 'Innholdet er for langt. Kort det ned og prøv igjen.',
-	warning_lead: 'Ikke åpne lenken selv.',
-	warning_text: 'Den første som åpner lenken bruker den opp. Innholdet kan ikke vises igjen.'
+	warning_lead: 'Ikke vis innholdet selv.',
+	warning_text: 'Den første som viser innholdet bruker det opp. Det kan ikke vises igjen.'
 } satisfies CreateSecretMessages;
 
 export const secret_viewer_messages = {
@@ -35,8 +35,8 @@ export const secret_viewer_messages = {
 	generic_error: 'Kunne ikke åpne innholdet.',
 	invalid_link: 'Lenken er ugyldig.',
 	loading: 'Åpner innholdet …',
-	new_link: 'Lag en ny lenke',
 	not_found: 'Innholdet finnes ikke, har utløpt eller er allerede åpnet.',
 	output_label: 'Innhold',
-	rate_limited: 'For mange forsøk. Vent litt og prøv igjen.'
+	rate_limited: 'For mange forsøk. Vent litt og prøv igjen.',
+	reveal_secret: 'Vis innholdet'
 } satisfies SecretViewerMessages;
