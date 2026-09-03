@@ -1,0 +1,17 @@
+{
+	"name": "@sendenv/web-ui",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"build": "bun run check",
+		"check": "tsc --noEmit -p tsconfig.json"
+	},
+	"dependencies": {
+		"@sendenv/sdk": "workspace:*",
+		"remix": "3.0.0-rc.1"
+	}
+}

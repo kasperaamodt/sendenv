@@ -1,0 +1,93 @@
+name: Publish SDK
+
+on:
+  push:
+    tags:
+      - 'sdk-v*'
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: publish-sdk
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish @sendenv/sdk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+          registry-url: https://registry.npmjs.org
+
+      - name: Set up npm with trusted publishing support
+        run: npm install --global npm@11
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify release tag
+        id: package
+        shell: bash
+        run: |
+          version="$(node -p "require('./packages/sdk/package.json').version")"
+          package_name="$(node -p "require('./packages/sdk/package.json').name")"
+          expected_tag="sdk-v${version}"
+
+          if [[ "${GITHUB_REF_NAME}" != "${expected_tag}" ]]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version ${version}."
+            exit 1
+          fi
+
+          git fetch origin main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "Tagged commit is not on the main branch."
+            exit 1
+          fi
+
+          echo "name=${package_name}" >> "${GITHUB_OUTPUT}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check whether the version already exists
+        id: registry
+        shell: bash
+        run: |
+          if npm view "${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}" version >/dev/null 2>&1; then
+            echo "published=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "published=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Check workspace
+        run: bun run check
+
+      - name: Test workspace
+        run: bun run test
+
+      - name: Publish package
+        if: steps.registry.outputs.published != 'true'
+        run: npm publish ./packages/sdk --access public
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 ||
+            gh release create "${GITHUB_REF_NAME}" \
+              --generate-notes \
+              --title "@sendenv/sdk v${{ steps.package.outputs.version }}"

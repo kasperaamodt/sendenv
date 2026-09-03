@@ -1,0 +1,28 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"globalPassThroughEnv": [
+		"API_URL",
+		"CORS_ORIGINS",
+		"DATABASE_URL",
+		"HOST",
+		"PORT",
+		"TRUST_PROXY_HOPS",
+		"VALKEY_URL"
+	],
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"]
+		},
+		"check": {
+			"dependsOn": ["^build"]
+		},
+		"dev": {
+			"cache": false,
+			"dependsOn": ["^build"],
+			"persistent": true
+		},
+		"test": {
+			"dependsOn": ["^build"]
+		}
+	}
+}
