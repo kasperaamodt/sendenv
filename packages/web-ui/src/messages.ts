@@ -37,4 +37,5 @@ export interface SecretViewerMessages extends SerializableProps {
 	not_found: string;
 	output_label: string;
 	rate_limited: string;
+	reveal_secret: string;
 }

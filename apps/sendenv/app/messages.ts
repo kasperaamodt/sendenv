@@ -24,8 +24,8 @@ export const create_secret_messages = {
 	secret_label: 'Secret content',
 	secret_placeholder: 'Enter your secret content here…',
 	secret_too_large: 'Secret is too large. Shorten it and try again.',
-	warning_lead: 'Do not open this link yourself.',
-	warning_text: 'The first person to open it consumes the secret, and it cannot be viewed again.'
+	warning_lead: 'Do not reveal this secret yourself.',
+	warning_text: 'The first person to reveal it consumes the secret, and it cannot be viewed again.'
 } satisfies CreateSecretMessages;
 
 export const secret_viewer_messages = {
@@ -37,5 +37,6 @@ export const secret_viewer_messages = {
 	loading: 'Decrypting…',
 	not_found: 'The secret does not exist, has expired, or has already been opened.',
 	output_label: 'Shared secret',
-	rate_limited: 'Too many attempts. Wait a moment and try again.'
+	rate_limited: 'Too many attempts. Wait a moment and try again.',
+	reveal_secret: 'Reveal secret'
 } satisfies SecretViewerMessages;

@@ -26,9 +26,21 @@ export const SecretViewer = clientEntry(
 		let copied = false;
 		let data: string | null = null;
 		let error: string | null = null;
-		let loading = true;
+		let hydrated = false;
+		let loading = false;
 
-		handle.queueTask(async (signal) => {
+		handle.queueTask(() => {
+			hydrated = true;
+			handle.update();
+		});
+
+		async function reveal_secret(signal: AbortSignal) {
+			if (!hydrated || loading || data) return;
+
+			error = null;
+			loading = true;
+			await handle.update();
+
 			try {
 				const root_key = window.location.hash.slice(1);
 				if (!is_valid_key_fragment(root_key)) throw new Error(INVALID_LINK);
@@ -45,7 +57,7 @@ export const SecretViewer = clientEntry(
 					handle.update();
 				}
 			}
-		});
+		}
 
 		async function copy_secret() {
 			if (!data) return;
@@ -79,7 +91,7 @@ export const SecretViewer = clientEntry(
 							</a>
 						) : null}
 					</div>
-				) : (
+				) : data ? (
 					<div class="stack-small">
 						<div class="field">
 							<label htmlFor="secret-output">{messages.output_label}</label>
@@ -103,6 +115,17 @@ export const SecretViewer = clientEntry(
 								{copied ? messages.copied : messages.copy_secret}
 							</button>
 						</div>
+					</div>
+				) : (
+					<div class="actions">
+						<button
+							type="button"
+							class="button button-primary"
+							disabled={!hydrated}
+							mix={on('click', (_event, signal) => reveal_secret(signal))}
+						>
+							{messages.reveal_secret}
+						</button>
 					</div>
 				)}
 			</section>
