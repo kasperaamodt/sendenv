@@ -1,99 +1,169 @@
-# Sendenv
+# Sendenv platform
 
-Sendenv is a secure, end-to-end encrypted service for sharing sensitive information. Perfect for sharing environment variables, API keys, or other secrets securely.
+One encrypted secret service, exposed through two products:
 
-## How it Works
+- [sendenv.app](https://sendenv.app) for developers and API integrations
+- [hvisk.no](https://hvisk.no) for simple, private sharing
 
-1. Your secret is encrypted in your browser using AES-GCM encryption
-2. Only the encrypted data is sent to our server
-3. A unique link is generated containing a root key in the URL fragment
-4. Separate encryption and access keys are derived from the root key with HKDF-SHA-256
-5. The encryption key is never sent to our server
-6. Links expire after 1 hour by default and can only be used once
+Both frontends encrypt and decrypt in the browser. The API stores only ciphertext and a SHA-256
+access verifier. Root keys stay in URL fragments and are never sent to the server.
 
-## Security Features
+## Repository
 
-- End-to-end encryption using AES-GCM
-- 256-bit encryption keys
-- Separate encryption and access keys derived with HKDF-SHA-256
-- Ciphertext is bound to its protocol version and content ID with authenticated additional data
-- Keys are generated using the Web Crypto API
-- Encryption/decryption happens entirely in your browser
-- Server never sees unencrypted data
-- One-time use links
-- Configurable expiration from 1 to 24 hours
-- Used and expired ciphertext is deleted within ten minutes
+This is a Bun workspace orchestrated by Turborepo.
 
-## Technical Details
-
-- Built with Remix 3 and Bun
-- Uses Web Crypto API for cryptographic operations
-- MySQL database (with Drizzle ORM)
-- URLs are structured as `sendenv.app/s/{id}#{key}`
-  - `id`: 128-bit identifier for the encrypted content
-  - `key`: Root key used to derive encryption and access keys; never sent to the server
+```text
+apps/
+  api/          Elysia API, OpenAPI, Drizzle, MySQL and Valkey
+  sendenv/      Developer-focused Remix frontend
+  hvisk/        Norwegian consumer-facing Remix frontend
+packages/
+  sdk/          Browser-safe encryption protocol, contracts and HTTP client
+  web-ui/       Shared frontend components, styles and copy contracts
+```
 
 ## Development
 
+Create a root `.env` from `.env.example`, then run:
+
 ```bash
-# Install dependencies
 bun install
-
-# Start development server
-bun dev
-
-# Typecheck and test
-bun run check
-bun test
-
-# Apply database migrations
 bun run db:migrate
-
-# Start the production server
-bun run start
+bun dev
 ```
 
-## REST API
+Local services:
 
-The web UI uses the same REST API that is available to other clients. Clients must encrypt the
-secret locally and keep the AES key out of the request.
+| Service | URL                             |
+| ------- | ------------------------------- |
+| API     | `http://localhost:3000`         |
+| OpenAPI | `http://localhost:3000/openapi` |
+| Sendenv | `http://localhost:3001`         |
+| Hvisk   | `http://localhost:3002`         |
 
-```http
-POST /api/secrets
-Content-Type: application/json
+Useful commands:
 
+```bash
+bun run check
+bun run test
+bun run lint
+bun run build
+bun run db:migrate
+bun run db:studio
+```
+
+## SDK releases
+
+The browser-safe SDK is published from `packages/sdk` as `@sendenv/sdk`. The first release must be
+published manually after the code has been committed and pushed:
+
+```bash
+bun run sdk:pack
+bun run sdk:publish
+```
+
+After the first release, configure npm Trusted Publishing for GitHub Actions with:
+
+```text
+Owner: aamodtko
+Repository: sendenv
+Workflow: publish-sdk.yml
+Allowed action: npm publish
+```
+
+For later releases, update the package version, commit and push it, then tag that commit:
+
+```bash
+git tag sdk-v0.2.0
+git push origin sdk-v0.2.0
+```
+
+The tag must match the version in `packages/sdk/package.json`. The workflow verifies, tests,
+publishes with npm OIDC and creates the GitHub release. Never run `npm publish` without the explicit
+package path from this monorepo.
+
+## API
+
+API v1 accepts payloads produced by encryption protocol v1.
+
+```text
+POST /v1/secrets
+POST /v1/secrets/:contentId/consume
+GET  /health
+GET  /openapi
+GET  /openapi/json
+```
+
+Creating a secret accepts an encrypted payload:
+
+```json
 {
-	"version": 2,
-	"content_id": "abcdef123456abcdef123456abcdef12",
-	"data": "v2.<base64url encoded AES-GCM payload>",
-	"access_verifier": "<base64url encoded SHA-256 verifier>",
-	"expiration": 1
+	"version": 1,
+	"contentId": "abcdef123456abcdef123456abcdef12",
+	"ciphertext": "v1.<base64url payload>",
+	"accessVerifier": "<base64url SHA-256 verifier>",
+	"expiresInHours": 1
 }
 ```
 
-`expiration` can be `1`, `3`, `6`, `12`, or `24` hours. A successful request returns `204`. Sending
-`POST /api/secrets/{content_id}` with `Authorization: Sendenv <access-token>` and
-`X-Sendenv-Consume: 1` returns the encrypted payload once. The client constructs the share URL as
-`/s/{content_id}#v2.{root-key}` and decrypts the response locally.
+Consumption uses standard bearer authentication:
 
-The v2 protocol derives the AES-256-GCM key and access token from the root key with HKDF-SHA-256.
-It uses `sendenv:v2` as the HKDF salt, `sendenv:v2:encryption` and `sendenv:v2:access` as the info
-values, and `sendenv:v2:{content_id}` as AES-GCM additional authenticated data. The server stores
-`SHA-256(access-token)` and only consumes a secret when the presented access token matches.
+```http
+POST /v1/secrets/abcdef123456abcdef123456abcdef12/consume
+Authorization: Bearer <access-token>
+```
 
-Used and expired records are deleted by the Bun server every ten minutes. `TRUST_PROXY_HOPS`
-defaults to `0`; set it to the number of trusted reverse proxies in front of the container to apply
-rate limits to the original client IP safely.
+Successful consumption is atomic and returns the ciphertext once. Missing, expired, consumed and
+wrong-token secrets all produce the same not-found response.
 
-Migration `0001_cold_iron_man.sql` intentionally rebuilds the secrets table before enabling the
-v2-only protocol. The production start command acquires a MySQL advisory lock and applies pending
-migrations before the HTTP server starts, so Coolify should not configure separate pre- or
-post-deployment migration commands. Existing share links do not survive the migration.
+OpenAPI documents the transport contract. Integrations must also implement the browser-safe
+protocol in `packages/sdk`; plaintext and root keys must never be sent to the API.
 
-## Contributing
+## Encryption
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Protocol v1 uses:
 
-## License
+- A random 256-bit root key in the URL fragment
+- HKDF-SHA-256 to derive independent encryption and access keys
+- AES-256-GCM with a random 96-bit IV
+- `sendenv:v1:{contentId}` as authenticated additional data
+- `SHA-256(access-token)` as the stored verifier
+- A maximum plaintext size of 49,121 UTF-8 bytes
 
-[MIT License](LICENSE)
+The `sendenv:v1` value is a protocol namespace shared by both brands.
+
+## Coolify
+
+Create five resources:
+
+| Resource | Dockerfile                | Port   | Health check |
+| -------- | ------------------------- | ------ | ------------ |
+| MySQL    | Managed service           | MySQL  | Managed      |
+| Valkey   | Managed service           | Valkey | Managed      |
+| API      | `apps/api/Dockerfile`     | `3000` | `/health`    |
+| Sendenv  | `apps/sendenv/Dockerfile` | `3000` | `/health`    |
+| Hvisk    | `apps/hvisk/Dockerfile`   | `3000` | `/health`    |
+
+Use the repository root as build context for all three Docker resources.
+
+API environment:
+
+```text
+DATABASE_URL=mysql://...
+VALKEY_URL=redis://...
+TRUST_PROXY_HOPS=1
+CORS_ORIGINS=https://sendenv.app,https://www.sendenv.app,https://hvisk.no,https://www.hvisk.no
+```
+
+Frontend environment for both Sendenv and Hvisk:
+
+```text
+API_URL=https://api.sendenv.app
+```
+
+The API container applies Drizzle migrations under a MySQL advisory lock before starting. Leave
+Coolify pre-deployment, post-deployment and start-command overrides empty. Frontend containers do
+not receive database or Valkey credentials.
+
+All production images include `curl` because Coolify executes its health check inside the
+container.

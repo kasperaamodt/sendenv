@@ -1,38 +1,36 @@
 {
-	"name": "sendenv",
+	"name": "sendenv-platform",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
 	"packageManager": "bun@1.4.0",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
 	"scripts": {
-		"dev": "NODE_ENV=development bun --watch server.ts",
-		"start": "bun run db:migrate && NODE_ENV=production bun server.ts",
-		"build": "bun run check",
-		"check": "tsc --noEmit",
-		"test": "NODE_ENV=test bun test",
+		"dev": "turbo run dev",
+		"build": "turbo run build",
+		"check": "turbo run check",
+		"test": "turbo run test",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
-		"db:generate": "drizzle-kit generate",
-		"db:migrate": "bun migrate.ts",
-		"db:studio": "drizzle-kit studio"
+		"sdk:pack": "npm pack ./packages/sdk --dry-run",
+		"sdk:publish": "npm publish ./packages/sdk --access public",
+		"db:generate": "bun --cwd apps/api run db:generate",
+		"db:migrate": "bun --cwd apps/api run db:migrate",
+		"db:studio": "bun --cwd apps/api run db:studio"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.0",
 		"@eslint/js": "^9.39.1",
 		"@types/bun": "1.4.0",
-		"drizzle-kit": "^0.31.8",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
 		"globals": "^16.5.0",
 		"prettier": "^3.7.4",
+		"turbo": "2.10.12",
 		"typescript": "5.9.3",
 		"typescript-eslint": "^8.48.1"
-	},
-	"dependencies": {
-		"@devhuset-oss/ratelimit": "^1.0.0",
-		"drizzle-orm": "^0.45.0",
-		"mysql2": "^3.15.3",
-		"remix": "3.0.0-rc.1",
-		"zod": "^4.1.13"
 	}
 }

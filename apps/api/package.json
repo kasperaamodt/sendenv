@@ -1,0 +1,28 @@
+{
+	"name": "@sendenv/api",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "NODE_ENV=development CORS_ORIGINS=http://localhost:3001,http://localhost:3002 bun --watch src/server.ts",
+		"start": "bun run db:migrate && NODE_ENV=production bun src/server.ts",
+		"build": "bun run check",
+		"check": "tsc --noEmit -p tsconfig.json",
+		"test": "bun test",
+		"db:generate": "drizzle-kit generate --config drizzle.config.ts",
+		"db:migrate": "bun src/db/migrate.ts",
+		"db:studio": "drizzle-kit studio --config drizzle.config.ts"
+	},
+	"dependencies": {
+		"@devhuset-oss/ratelimit": "^1.0.0",
+		"@elysiajs/cors": "1.4.2",
+		"@elysiajs/openapi": "1.4.16",
+		"@sendenv/sdk": "workspace:*",
+		"drizzle-orm": "^0.45.0",
+		"elysia": "1.4.30",
+		"mysql2": "^3.15.3"
+	},
+	"devDependencies": {
+		"drizzle-kit": "^0.31.8"
+	}
+}

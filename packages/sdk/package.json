@@ -1,0 +1,52 @@
+{
+	"name": "@sendenv/sdk",
+	"version": "0.1.0",
+	"description": "Browser-safe SDK for end-to-end encrypted, one-time Sendenv secrets",
+	"type": "module",
+	"sideEffects": false,
+	"license": "MIT",
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./client": {
+			"types": "./dist/client.d.ts",
+			"import": "./dist/client.js"
+		},
+		"./protocol": {
+			"types": "./dist/protocol.d.ts",
+			"import": "./dist/protocol.js"
+		}
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/aamodtko/sendenv.git",
+		"directory": "packages/sdk"
+	},
+	"homepage": "https://github.com/aamodtko/sendenv/tree/main/packages/sdk#readme",
+	"bugs": {
+		"url": "https://github.com/aamodtko/sendenv/issues"
+	},
+	"keywords": [
+		"sendenv",
+		"secrets",
+		"encryption",
+		"end-to-end-encryption"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "bun run clean && tsc -p tsconfig.build.json",
+		"check": "tsc --noEmit -p tsconfig.json",
+		"clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+		"test": "bun test",
+		"prepack": "bun run check && bun run test && bun run build"
+	}
+}
