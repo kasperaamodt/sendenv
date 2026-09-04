@@ -213,7 +213,7 @@ export function createApi({
 			}
 		)
 		.head(
-			'/v1/secrets/:contentId/consume',
+			'/v1/secrets/:contentId',
 			async ({ params, request, set, status }) => {
 				const accessVerifier = getAccessVerifier(request);
 				if (!accessVerifier) {
@@ -294,8 +294,10 @@ export function createApi({
 function getRateLimitScope(request: Request): 'availability' | 'create' | 'consume' | null {
 	const pathname = new URL(request.url).pathname;
 	if (request.method === 'POST' && pathname === '/v1/secrets') return 'create';
+	if (request.method === 'HEAD' && /^\/v1\/secrets\/[^/]+$/.test(pathname)) {
+		return 'availability';
+	}
 	if (!/^\/v1\/secrets\/[^/]+\/consume$/.test(pathname)) return null;
-	if (request.method === 'HEAD') return 'availability';
 	return request.method === 'POST' ? 'consume' : null;
 }
 

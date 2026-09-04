@@ -236,7 +236,8 @@ describe('Sendenv API', () => {
 			accessVerifier,
 			expiresAt: new Date('2026-09-03T13:00:00.000Z')
 		});
-		const availabilityUrl = `http://localhost/v1/secrets/${contentId}/consume`;
+		const availabilityUrl = `http://localhost/v1/secrets/${contentId}`;
+		const consumeUrl = `${availabilityUrl}/consume`;
 		const check = (token = accessToken) =>
 			api.handle(
 				new Request(availabilityUrl, {
@@ -251,7 +252,7 @@ describe('Sendenv API', () => {
 		expect(
 			(
 				await api.handle(
-					new Request(availabilityUrl, {
+					new Request(consumeUrl, {
 						method: 'POST',
 						headers: { Authorization: `Bearer ${accessToken}` }
 					})
@@ -293,7 +294,7 @@ describe('Sendenv API', () => {
 		const allowed = await api.handle(createRequest(validCreateBody, 'https://hvisk.no'));
 		const denied = await api.handle(createRequest(validCreateBody, 'https://example.com'));
 		const availabilityPreflight = await api.handle(
-			new Request(`http://localhost/v1/secrets/${contentId}/consume`, {
+			new Request(`http://localhost/v1/secrets/${contentId}`, {
 				method: 'OPTIONS',
 				headers: {
 					Origin: 'https://hvisk.no',
@@ -352,9 +353,7 @@ describe('Sendenv API', () => {
 			createOperation?.requestBody?.content['application/json']?.schema.properties.expiresInHours
 		).toMatchObject({ type: 'number', enum: [1, 3, 6, 12, 24] });
 		expect(document.paths['/v1/secrets/{contentId}/consume']).toBeDefined();
-		expect(
-			document.paths['/v1/secrets/{contentId}/consume']?.head?.responses?.['204']
-		).toBeDefined();
+		expect(document.paths['/v1/secrets/{contentId}']?.head?.responses?.['204']).toBeDefined();
 		expect(document.paths['/health']?.get?.responses?.['204']).toBeDefined();
 	});
 });

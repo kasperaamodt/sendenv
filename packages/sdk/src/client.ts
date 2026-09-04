@@ -47,7 +47,7 @@ export function create_api_client(base_url: string) {
 		},
 
 		async is_secret_available(content_id: string, access_token: string, signal?: AbortSignal) {
-			const response = await fetch(`${base}/v1/secrets/${encodeURIComponent(content_id)}/consume`, {
+			const response = await fetch(`${base}/v1/secrets/${encodeURIComponent(content_id)}`, {
 				method: 'HEAD',
 				headers: { Authorization: `Bearer ${access_token}` },
 				signal
