@@ -68,7 +68,7 @@ export function createApi({
 					const origin = request.headers.get('origin');
 					return origin ? allowedOrigins.includes(origin) : false;
 				},
-				methods: ['GET', 'POST', 'OPTIONS'],
+				methods: ['GET', 'HEAD', 'POST', 'OPTIONS'],
 				allowedHeaders: ['Authorization', 'Content-Type'],
 				exposeHeaders: [
 					'Location',
@@ -212,12 +212,49 @@ export function createApi({
 				}
 			}
 		)
+		.head(
+			'/v1/secrets/:contentId/consume',
+			async ({ params, request, set, status }) => {
+				const accessVerifier = getAccessVerifier(request);
+				if (!accessVerifier) {
+					set.headers['www-authenticate'] = 'Bearer realm="sendenv-secret"';
+					return status(
+						401,
+						errorBody('INVALID_ACCESS_TOKEN', 'A valid access token is required.')
+					);
+				}
+
+				if (!(await store.available(params.contentId, accessVerifier, now()))) {
+					return status(
+						404,
+						errorBody('SECRET_NOT_FOUND', 'Secret not found or already consumed.')
+					);
+				}
+
+				return new Response(null, { status: 204 });
+			},
+			{
+				params: t.Object({ contentId: t.String({ pattern: CONTENT_ID_PATTERN }) }),
+				response: {
+					204: t.Void(),
+					400: errorSchema,
+					401: errorSchema,
+					404: errorSchema,
+					429: errorSchema,
+					500: errorSchema
+				},
+				detail: {
+					tags: ['Secrets'],
+					summary: 'Check whether an encrypted secret can be consumed',
+					security: [{ secretAccess: [] }]
+				}
+			}
+		)
 		.post(
 			'/v1/secrets/:contentId/consume',
 			async ({ params, request, set, status }) => {
-				const authorization = request.headers.get('authorization');
-				const accessToken = authorization?.match(/^Bearer ([A-Za-z0-9_-]{43})$/)?.[1];
-				if (!accessToken || !ACCESS_TOKEN_PATTERN.test(accessToken)) {
+				const accessVerifier = getAccessVerifier(request);
+				if (!accessVerifier) {
 					set.headers['www-authenticate'] = 'Bearer realm="sendenv-secret"';
 					return status(
 						401,
@@ -225,16 +262,6 @@ export function createApi({
 					);
 				}
 
-				const accessTokenBytes = Buffer.from(accessToken, 'base64url');
-				if (accessTokenBytes.length !== 32) {
-					set.headers['www-authenticate'] = 'Bearer realm="sendenv-secret"';
-					return status(
-						401,
-						errorBody('INVALID_ACCESS_TOKEN', 'A valid access token is required.')
-					);
-				}
-
-				const accessVerifier = createHash('sha256').update(accessTokenBytes).digest();
 				const ciphertext = await store.consume(params.contentId, accessVerifier, now());
 				if (ciphertext === null) {
 					return status(
@@ -264,19 +291,19 @@ export function createApi({
 		);
 }
 
-function getRateLimitScope(request: Request): 'create' | 'consume' | null {
-	if (request.method !== 'POST') return null;
-
+function getRateLimitScope(request: Request): 'availability' | 'create' | 'consume' | null {
 	const pathname = new URL(request.url).pathname;
-	if (pathname === '/v1/secrets') return 'create';
-	return /^\/v1\/secrets\/[^/]+\/consume$/.test(pathname) ? 'consume' : null;
+	if (request.method === 'POST' && pathname === '/v1/secrets') return 'create';
+	if (!/^\/v1\/secrets\/[^/]+\/consume$/.test(pathname)) return null;
+	if (request.method === 'HEAD') return 'availability';
+	return request.method === 'POST' ? 'consume' : null;
 }
 
 async function limitRequest(
 	request: Request,
 	rateLimiter: RateLimiter,
 	trustedProxyHops: number,
-	scope: 'create' | 'consume'
+	scope: 'availability' | 'create' | 'consume'
 ): Promise<Awaited<ReturnType<RateLimiter['limit']>> | null> {
 	const forwardedFor = request.headers
 		.get('x-forwarded-for')
@@ -291,6 +318,16 @@ async function limitRequest(
 	const result = await rateLimiter.limit(key);
 
 	return result.success ? null : result;
+}
+
+function getAccessVerifier(request: Request): Buffer | null {
+	const authorization = request.headers.get('authorization');
+	const accessToken = authorization?.match(/^Bearer ([A-Za-z0-9_-]{43})$/)?.[1];
+	if (!accessToken || !ACCESS_TOKEN_PATTERN.test(accessToken)) return null;
+
+	const accessTokenBytes = Buffer.from(accessToken, 'base64url');
+	if (accessTokenBytes.length !== 32) return null;
+	return createHash('sha256').update(accessTokenBytes).digest();
 }
 
 function errorBody(code: string, message: string) {

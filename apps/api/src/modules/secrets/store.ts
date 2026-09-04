@@ -12,6 +12,7 @@ export interface NewSecret {
 
 export interface SecretStore {
 	create(secret: NewSecret): Promise<boolean>;
+	available(contentId: string, accessVerifier: Buffer, now: Date): Promise<boolean>;
 	consume(contentId: string, accessVerifier: Buffer, now: Date): Promise<string | null>;
 	cleanup(now: Date): Promise<number>;
 }
@@ -38,6 +39,23 @@ export const secretStore: SecretStore = {
 			}
 			throw error;
 		}
+	},
+
+	async available(contentId, accessVerifier, now) {
+		const [secret] = await db
+			.select({ contentId: secrets.content_id })
+			.from(secrets)
+			.where(
+				and(
+					eq(secrets.content_id, contentId),
+					eq(secrets.access_verifier, accessVerifier),
+					eq(secrets.accessed, false),
+					gt(secrets.expires_at, now)
+				)
+			)
+			.limit(1);
+
+		return secret !== undefined;
 	},
 
 	async consume(contentId, accessVerifier, now) {

@@ -29,6 +29,7 @@ export const create_secret_messages = {
 } satisfies CreateSecretMessages;
 
 export const secret_viewer_messages = {
+	checking: 'Checking link…',
 	copy_failed: 'Could not copy the secret. Select it and copy it manually.',
 	copied: 'Copied',
 	copy_secret: 'Copy secret',

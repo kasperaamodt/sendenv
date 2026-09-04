@@ -27,6 +27,7 @@ export interface CreateSecretMessages extends SerializableProps {
 }
 
 export interface SecretViewerMessages extends SerializableProps {
+	checking: string;
 	copy_failed: string;
 	copied: string;
 	copy_secret: string;

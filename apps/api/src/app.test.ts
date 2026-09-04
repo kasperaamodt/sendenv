@@ -27,6 +27,13 @@ class MemoryStore implements SecretStore {
 		return true;
 	}
 
+	async available(id: string, providedVerifier: Buffer, now: Date) {
+		const secret = this.secrets.get(id);
+		return Boolean(
+			secret && secret.accessVerifier.equals(providedVerifier) && secret.expiresAt > now
+		);
+	}
+
 	async consume(id: string, providedVerifier: Buffer, now: Date) {
 		const secret = this.secrets.get(id);
 		if (!secret || !secret.accessVerifier.equals(providedVerifier) || secret.expiresAt <= now) {
@@ -221,6 +228,39 @@ describe('Sendenv API', () => {
 		expect((await api.handle(request())).status).toBe(404);
 	});
 
+	test('checks availability without consuming the secret', async () => {
+		const { api, store } = setup();
+		store.secrets.set(contentId, {
+			contentId,
+			ciphertext: 'v1.encrypted-data',
+			accessVerifier,
+			expiresAt: new Date('2026-09-03T13:00:00.000Z')
+		});
+		const availabilityUrl = `http://localhost/v1/secrets/${contentId}/consume`;
+		const check = (token = accessToken) =>
+			api.handle(
+				new Request(availabilityUrl, {
+					method: 'HEAD',
+					headers: { Authorization: `Bearer ${token}` }
+				})
+			);
+
+		expect((await check('B'.repeat(43))).status).toBe(404);
+		expect((await check()).status).toBe(204);
+		expect(store.secrets.has(contentId)).toBe(true);
+		expect(
+			(
+				await api.handle(
+					new Request(availabilityUrl, {
+						method: 'POST',
+						headers: { Authorization: `Bearer ${accessToken}` }
+					})
+				)
+			).status
+		).toBe(200);
+		expect((await check()).status).toBe(404);
+	});
+
 	test('challenges requests without a bearer token', async () => {
 		const { api } = setup();
 		const response = await api.handle(
@@ -252,10 +292,24 @@ describe('Sendenv API', () => {
 		const { api } = setup();
 		const allowed = await api.handle(createRequest(validCreateBody, 'https://hvisk.no'));
 		const denied = await api.handle(createRequest(validCreateBody, 'https://example.com'));
+		const availabilityPreflight = await api.handle(
+			new Request(`http://localhost/v1/secrets/${contentId}/consume`, {
+				method: 'OPTIONS',
+				headers: {
+					Origin: 'https://hvisk.no',
+					'Access-Control-Request-Method': 'HEAD',
+					'Access-Control-Request-Headers': 'Authorization'
+				}
+			})
+		);
 
 		expect(allowed.headers.get('access-control-allow-origin')).toBe('https://hvisk.no');
 		expect(allowed.headers.get('access-control-expose-headers')).toContain('Location');
 		expect(denied.headers.has('access-control-allow-origin')).toBe(false);
+		expect(availabilityPreflight.headers.get('access-control-allow-methods')).toContain('HEAD');
+		expect(availabilityPreflight.headers.get('access-control-allow-headers')).toContain(
+			'Authorization'
+		);
 	});
 
 	test('reports dependency failures through readiness', async () => {
@@ -278,6 +332,7 @@ describe('Sendenv API', () => {
 				string,
 				{
 					get?: { responses?: Record<string, unknown> };
+					head?: { responses?: Record<string, unknown> };
 					post?: {
 						requestBody?: {
 							content: Record<
@@ -297,6 +352,9 @@ describe('Sendenv API', () => {
 			createOperation?.requestBody?.content['application/json']?.schema.properties.expiresInHours
 		).toMatchObject({ type: 'number', enum: [1, 3, 6, 12, 24] });
 		expect(document.paths['/v1/secrets/{contentId}/consume']).toBeDefined();
+		expect(
+			document.paths['/v1/secrets/{contentId}/consume']?.head?.responses?.['204']
+		).toBeDefined();
 		expect(document.paths['/health']?.get?.responses?.['204']).toBeDefined();
 	});
 });

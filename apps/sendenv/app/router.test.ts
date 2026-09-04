@@ -37,7 +37,8 @@ describe('Sendenv frontend', () => {
 		expect(response.headers.get('cache-control')).toBe('no-store');
 		expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow, noarchive');
 		expect(html).toContain('Create a new secret');
-		expect(html).toContain('Reveal secret');
+		expect(html).toContain('Checking link…');
+		expect(html).not.toContain('>Reveal secret</button>');
 		expect(html).toContain('secret-output-concealed');
 		expect(html).toContain('secret-actions');
 		expect(html).toContain('button button-secondary');
