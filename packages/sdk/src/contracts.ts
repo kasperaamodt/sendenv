@@ -20,6 +20,12 @@ export interface ConsumeSecretResponse {
 	ciphertext: string;
 }
 
+export type SecretStatus = 'available' | 'consumed' | 'expired' | 'missing';
+
+export interface SecretStatusResponse {
+	status: SecretStatus;
+}
+
 export interface ApiErrorResponse {
 	error: {
 		code: string;

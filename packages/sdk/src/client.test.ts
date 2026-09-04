@@ -47,24 +47,21 @@ describe('API client', () => {
 		});
 	});
 
-	test('checks availability without consuming', async () => {
+	test('gets secret status without consuming', async () => {
 		let requested_url: string | undefined;
 		let requested_init: RequestInit | undefined;
 		globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
 			requested_url = String(input);
 			requested_init = init;
-			return new Response(null, { status: 204 });
+			return Response.json({ status: 'expired' });
 		}) as unknown as typeof fetch;
 		const client = create_api_client('https://api.sendenv.app');
 
-		expect(await client.is_secret_available('a'.repeat(32), 'token')).toBe(true);
+		expect(await client.get_secret_status('a'.repeat(32))).toEqual({ status: 'expired' });
 		expect(requested_url).toBe(`https://api.sendenv.app/v1/secrets/${'a'.repeat(32)}`);
 		expect(requested_init).toMatchObject({
-			method: 'HEAD',
-			headers: { Authorization: 'Bearer token' }
+			method: 'GET',
+			headers: { Accept: 'application/json' }
 		});
-
-		globalThis.fetch = (async () => new Response(null, { status: 404 })) as unknown as typeof fetch;
-		expect(await client.is_secret_available('a'.repeat(32), 'token')).toBe(false);
 	});
 });

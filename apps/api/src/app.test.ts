@@ -6,6 +6,8 @@ import { decrypt_secret, encrypt_secret, get_access_token } from '@sendenv/sdk/p
 import { createApi, type RateLimiter } from './app.ts';
 import type { NewSecret, SecretStore } from './modules/secrets/store.ts';
 
+type MemorySecret = NewSecret & { accessed?: boolean };
+
 const fixedNow = new Date('2026-09-03T12:00:00.000Z');
 const contentId = 'abcdef123456abcdef123456abcdef12';
 const accessToken = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
@@ -19,7 +21,7 @@ const validCreateBody = {
 };
 
 class MemoryStore implements SecretStore {
-	secrets = new Map<string, NewSecret>();
+	secrets = new Map<string, MemorySecret>();
 
 	async create(secret: NewSecret) {
 		if (this.secrets.has(secret.contentId)) return false;
@@ -27,27 +29,33 @@ class MemoryStore implements SecretStore {
 		return true;
 	}
 
-	async available(id: string, providedVerifier: Buffer, now: Date) {
+	async status(id: string, now: Date) {
 		const secret = this.secrets.get(id);
-		return Boolean(
-			secret && secret.accessVerifier.equals(providedVerifier) && secret.expiresAt > now
-		);
+		if (!secret) return 'missing' as const;
+		if (secret.accessed) return 'consumed' as const;
+		if (secret.expiresAt <= now) return 'expired' as const;
+		return 'available' as const;
 	}
 
 	async consume(id: string, providedVerifier: Buffer, now: Date) {
 		const secret = this.secrets.get(id);
-		if (!secret || !secret.accessVerifier.equals(providedVerifier) || secret.expiresAt <= now) {
+		if (
+			!secret ||
+			secret.accessed ||
+			!secret.accessVerifier.equals(providedVerifier) ||
+			secret.expiresAt <= now
+		) {
 			return null;
 		}
 
-		this.secrets.delete(id);
+		this.secrets.set(id, { ...secret, accessed: true });
 		return secret.ciphertext;
 	}
 
 	async cleanup(now: Date) {
 		let deleted = 0;
 		for (const [id, secret] of this.secrets) {
-			if (secret.expiresAt < now) {
+			if (secret.accessed || secret.expiresAt < now) {
 				this.secrets.delete(id);
 				deleted++;
 			}
@@ -228,7 +236,7 @@ describe('Sendenv API', () => {
 		expect((await api.handle(request())).status).toBe(404);
 	});
 
-	test('checks availability without consuming the secret', async () => {
+	test('reports secret status without consuming the secret', async () => {
 		const { api, store } = setup();
 		store.secrets.set(contentId, {
 			contentId,
@@ -236,30 +244,27 @@ describe('Sendenv API', () => {
 			accessVerifier,
 			expiresAt: new Date('2026-09-03T13:00:00.000Z')
 		});
-		const availabilityUrl = `http://localhost/v1/secrets/${contentId}`;
-		const consumeUrl = `${availabilityUrl}/consume`;
-		const check = (token = accessToken) =>
-			api.handle(
-				new Request(availabilityUrl, {
-					method: 'HEAD',
-					headers: { Authorization: `Bearer ${token}` }
-				})
-			);
+		const statusUrl = `http://localhost/v1/secrets/${contentId}`;
+		const getStatus = async () => {
+			const response = await api.handle(new Request(statusUrl));
+			return response.json() as Promise<{ status: string }>;
+		};
 
-		expect((await check('B'.repeat(43))).status).toBe(404);
-		expect((await check()).status).toBe(204);
+		expect(await getStatus()).toEqual({ status: 'available' });
 		expect(store.secrets.has(contentId)).toBe(true);
-		expect(
-			(
-				await api.handle(
-					new Request(consumeUrl, {
-						method: 'POST',
-						headers: { Authorization: `Bearer ${accessToken}` }
-					})
-				)
-			).status
-		).toBe(200);
-		expect((await check()).status).toBe(404);
+
+		store.secrets.get(contentId)!.accessed = true;
+		expect(await getStatus()).toEqual({ status: 'consumed' });
+
+		store.secrets.set(contentId, {
+			...store.secrets.get(contentId)!,
+			accessed: false,
+			expiresAt: new Date('2026-09-03T11:00:00.000Z')
+		});
+		expect(await getStatus()).toEqual({ status: 'expired' });
+
+		store.secrets.delete(contentId);
+		expect(await getStatus()).toEqual({ status: 'missing' });
 	});
 
 	test('challenges requests without a bearer token', async () => {
@@ -293,24 +298,10 @@ describe('Sendenv API', () => {
 		const { api } = setup();
 		const allowed = await api.handle(createRequest(validCreateBody, 'https://hvisk.no'));
 		const denied = await api.handle(createRequest(validCreateBody, 'https://example.com'));
-		const availabilityPreflight = await api.handle(
-			new Request(`http://localhost/v1/secrets/${contentId}`, {
-				method: 'OPTIONS',
-				headers: {
-					Origin: 'https://hvisk.no',
-					'Access-Control-Request-Method': 'HEAD',
-					'Access-Control-Request-Headers': 'Authorization'
-				}
-			})
-		);
 
 		expect(allowed.headers.get('access-control-allow-origin')).toBe('https://hvisk.no');
 		expect(allowed.headers.get('access-control-expose-headers')).toContain('Location');
 		expect(denied.headers.has('access-control-allow-origin')).toBe(false);
-		expect(availabilityPreflight.headers.get('access-control-allow-methods')).toContain('HEAD');
-		expect(availabilityPreflight.headers.get('access-control-allow-headers')).toContain(
-			'Authorization'
-		);
 	});
 
 	test('reports dependency failures through readiness', async () => {
@@ -333,7 +324,6 @@ describe('Sendenv API', () => {
 				string,
 				{
 					get?: { responses?: Record<string, unknown> };
-					head?: { responses?: Record<string, unknown> };
 					post?: {
 						requestBody?: {
 							content: Record<
@@ -353,7 +343,7 @@ describe('Sendenv API', () => {
 			createOperation?.requestBody?.content['application/json']?.schema.properties.expiresInHours
 		).toMatchObject({ type: 'number', enum: [1, 3, 6, 12, 24] });
 		expect(document.paths['/v1/secrets/{contentId}/consume']).toBeDefined();
-		expect(document.paths['/v1/secrets/{contentId}']?.head?.responses?.['204']).toBeDefined();
+		expect(document.paths['/v1/secrets/{contentId}']?.get?.responses?.['200']).toBeDefined();
 		expect(document.paths['/health']?.get?.responses?.['204']).toBeDefined();
 	});
 });

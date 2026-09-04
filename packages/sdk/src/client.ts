@@ -2,7 +2,9 @@ import type {
 	ApiErrorResponse,
 	ConsumeSecretResponse,
 	CreateSecretRequest,
-	CreateSecretResponse
+	CreateSecretResponse,
+	SecretStatus,
+	SecretStatusResponse
 } from './contracts.js';
 
 export class ApiError extends Error {
@@ -46,21 +48,32 @@ export function create_api_client(base_url: string) {
 			return (await response.json()) as ConsumeSecretResponse;
 		},
 
-		async is_secret_available(content_id: string, access_token: string, signal?: AbortSignal) {
+		async get_secret_status(content_id: string, signal?: AbortSignal) {
 			const response = await fetch(`${base}/v1/secrets/${encodeURIComponent(content_id)}`, {
-				method: 'HEAD',
-				headers: { Authorization: `Bearer ${access_token}` },
+				method: 'GET',
+				headers: { Accept: 'application/json' },
 				signal
 			});
 
-			if (response.ok) return true;
-			if (response.status === 404) return false;
-			if (response.status === 429) {
-				throw new ApiError('Too many requests. Try again later.', 429, 'RATE_LIMITED');
+			if (!response.ok) throw await to_api_error(response);
+			const body = (await response.json()) as Partial<SecretStatusResponse>;
+			if (!is_secret_status(body.status)) {
+				throw new ApiError(
+					'The API returned an invalid secret status.',
+					response.status,
+					'API_ERROR'
+				);
 			}
-			throw await to_api_error(response);
+
+			return { status: body.status } satisfies SecretStatusResponse;
 		}
 	};
+}
+
+function is_secret_status(value: unknown): value is SecretStatus {
+	return (
+		value === 'available' || value === 'consumed' || value === 'expired' || value === 'missing'
+	);
 }
 
 async function to_api_error(response: Response): Promise<ApiError> {

@@ -1,5 +1,7 @@
 import { createController } from 'remix/router';
 
+import { create_api_client } from '@sendenv/sdk';
+
 import { assets } from '../assets.ts';
 import { routes } from '../routes.ts';
 import { HomePage } from './home-page.tsx';
@@ -13,6 +15,7 @@ const secret_headers = {
 const apiBaseUrl =
 	process.env.API_URL ?? (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
 if (!apiBaseUrl) throw new Error('API_URL is not set');
+const api = create_api_client(apiBaseUrl);
 
 export default createController(routes, {
 	actions: {
@@ -29,8 +32,9 @@ export default createController(routes, {
 		},
 
 		async secret(context) {
+			const { status } = await api.get_secret_status(context.params.id);
 			const response = await context.render(
-				<SecretPage apiBaseUrl={apiBaseUrl} contentId={context.params.id} />
+				<SecretPage apiBaseUrl={apiBaseUrl} contentId={context.params.id} status={status} />
 			);
 			for (const [name, value] of Object.entries(secret_headers)) response.headers.set(name, value);
 			return response;

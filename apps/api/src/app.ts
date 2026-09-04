@@ -68,7 +68,7 @@ export function createApi({
 					const origin = request.headers.get('origin');
 					return origin ? allowedOrigins.includes(origin) : false;
 				},
-				methods: ['GET', 'HEAD', 'POST', 'OPTIONS'],
+				methods: ['GET', 'POST', 'OPTIONS'],
 				allowedHeaders: ['Authorization', 'Content-Type'],
 				exposeHeaders: [
 					'Location',
@@ -212,41 +212,22 @@ export function createApi({
 				}
 			}
 		)
-		.head(
+		.get(
 			'/v1/secrets/:contentId',
-			async ({ params, request, set, status }) => {
-				const accessVerifier = getAccessVerifier(request);
-				if (!accessVerifier) {
-					set.headers['www-authenticate'] = 'Bearer realm="sendenv-secret"';
-					return status(
-						401,
-						errorBody('INVALID_ACCESS_TOKEN', 'A valid access token is required.')
-					);
-				}
-
-				if (!(await store.available(params.contentId, accessVerifier, now()))) {
-					return status(
-						404,
-						errorBody('SECRET_NOT_FOUND', 'Secret not found or already consumed.')
-					);
-				}
-
-				return new Response(null, { status: 204 });
-			},
+			async ({ params }) => ({ status: await store.status(params.contentId, now()) }),
 			{
 				params: t.Object({ contentId: t.String({ pattern: CONTENT_ID_PATTERN }) }),
-				response: {
-					204: t.Void(),
-					400: errorSchema,
-					401: errorSchema,
-					404: errorSchema,
-					429: errorSchema,
-					500: errorSchema
-				},
+				response: t.Object({
+					status: t.Union([
+						t.Literal('available'),
+						t.Literal('consumed'),
+						t.Literal('expired'),
+						t.Literal('missing')
+					])
+				}),
 				detail: {
 					tags: ['Secrets'],
-					summary: 'Check whether an encrypted secret can be consumed',
-					security: [{ secretAccess: [] }]
+					summary: 'Get encrypted secret status'
 				}
 			}
 		)
@@ -291,12 +272,9 @@ export function createApi({
 		);
 }
 
-function getRateLimitScope(request: Request): 'availability' | 'create' | 'consume' | null {
+function getRateLimitScope(request: Request): 'create' | 'consume' | null {
 	const pathname = new URL(request.url).pathname;
 	if (request.method === 'POST' && pathname === '/v1/secrets') return 'create';
-	if (request.method === 'HEAD' && /^\/v1\/secrets\/[^/]+$/.test(pathname)) {
-		return 'availability';
-	}
 	if (!/^\/v1\/secrets\/[^/]+\/consume$/.test(pathname)) return null;
 	return request.method === 'POST' ? 'consume' : null;
 }
@@ -305,7 +283,7 @@ async function limitRequest(
 	request: Request,
 	rateLimiter: RateLimiter,
 	trustedProxyHops: number,
-	scope: 'availability' | 'create' | 'consume'
+	scope: 'create' | 'consume'
 ): Promise<Awaited<ReturnType<RateLimiter['limit']>> | null> {
 	const forwardedFor = request.headers
 		.get('x-forwarded-for')
