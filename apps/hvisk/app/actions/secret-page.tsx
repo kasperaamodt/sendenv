@@ -27,12 +27,6 @@ export function SecretPage(handle: Handle<SecretPageProps>) {
 					contentId={handle.props.contentId}
 					messages={secret_viewer_messages}
 				/>
-
-				<div class="actions">
-					<a href="/" class="button button-secondary">
-						Del noe nytt
-					</a>
-				</div>
 			</div>
 		</Document>
 	);

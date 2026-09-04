@@ -171,6 +171,44 @@ h1 {
 	color: #9ca3af;
 }
 
+.secret-output {
+	position: relative;
+}
+
+.secret-output .text-area {
+	display: block;
+}
+
+.secret-output-concealed::before {
+	position: absolute;
+	inset: 1rem;
+	background: repeating-linear-gradient(
+		to bottom,
+		#9ca3af 0,
+		#9ca3af 0.75rem,
+		transparent 0.75rem,
+		transparent 1.5rem
+	);
+	content: '';
+	filter: blur(5px);
+	opacity: 0.55;
+	pointer-events: none;
+}
+
+.reveal-overlay {
+	position: absolute;
+	inset: 1px;
+	display: grid;
+	place-items: center;
+	border-radius: 0.3125rem;
+	background: rgb(255 255 255 / 48%);
+	backdrop-filter: blur(4px);
+}
+
+.secret-actions {
+	flex-wrap: nowrap;
+}
+
 .select {
 	width: auto;
 	appearance: none;
@@ -363,5 +401,9 @@ noscript {
 
 	.actions {
 		flex-wrap: wrap;
+	}
+
+	.secret-actions {
+		flex-wrap: nowrap;
 	}
 }
