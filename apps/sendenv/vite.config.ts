@@ -14,9 +14,6 @@ export default defineConfig(({ mode }) => ({
 		noExternal: ['@sendenv/sdk', '@sendenv/web-ui', '@stylexjs/stylex']
 	},
 	test: {
-		env: {
-			API_URL: 'http://localhost:3000'
-		},
 		environment: 'node',
 		include: ['src/**/*.test.ts']
 	}
