@@ -1,11 +1,33 @@
-import { afterAll, describe, expect, test } from 'bun:test';
+import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
+
+import type { SecretStatus } from '@sendenv/sdk';
 
 process.env.API_URL = 'https://api.sendenv.test';
+
+const original_fetch = globalThis.fetch;
+let secret_status: SecretStatus = 'available';
+let status_requests = 0;
+globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+	const url = input instanceof Request ? input.url : String(input);
+	if (url === 'https://api.sendenv.test/v1/secrets/abcdef123456abcdef123456abcdef12') {
+		status_requests++;
+		return Response.json({ status: secret_status });
+	}
+	return original_fetch(input, init);
+}) as typeof fetch;
 
 const { assets } = await import('./assets.ts');
 const { router } = await import('./router.ts');
 
-afterAll(() => assets.close());
+beforeEach(() => {
+	secret_status = 'available';
+	status_requests = 0;
+});
+
+afterAll(() => {
+	globalThis.fetch = original_fetch;
+	assets.close();
+});
 
 describe('Hvisk frontend', () => {
 	test('serves its health check', async () => {
@@ -37,11 +59,28 @@ describe('Hvisk frontend', () => {
 		expect(response.headers.get('cache-control')).toBe('no-store');
 		expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow, noarchive');
 		expect(html).toContain('Del noe nytt');
-		expect(html).toContain('Sjekker lenken …');
-		expect(html).not.toContain('>Vis innholdet</button>');
+		expect(html).toContain('>Vis innholdet</button>');
 		expect(html).toContain('secret-output-concealed');
 		expect(html).toContain('secret-actions');
 		expect(html).toContain('button button-secondary');
+		expect(status_requests).toBe(1);
+	});
+
+	test('renders only an error and new-secret link after the intro when the link expired', async () => {
+		secret_status = 'expired';
+		const response = await router.fetch(
+			new Request('http://localhost/s/abcdef123456abcdef123456abcdef12')
+		);
+		const html = await response.text();
+
+		expect(response.status).toBe(200);
+		expect(html).toContain('Noen har delt noe privat med deg');
+		expect(html).toContain('Denne lenken er utløpt.');
+		expect(html).toContain('Del noe nytt');
+		expect(html).not.toContain('id="secret-output"');
+		expect(html).not.toContain('>Vis innholdet</button>');
+		expect(html).not.toContain('>Kopier innholdet</button>');
+		expect(status_requests).toBe(1);
 	});
 
 	test('answers secret HEAD requests without rendering a body', async () => {

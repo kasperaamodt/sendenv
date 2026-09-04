@@ -26,34 +26,11 @@ export const SecretViewer = clientEntry(
 		let copied = false;
 		let data: string | null = null;
 		let error: string | null = null;
-		let availability: 'checking' | 'available' | 'unavailable' = 'checking';
+		let unavailable = false;
 		let loading = false;
 
-		handle.queueTask(async (signal) => {
-			try {
-				const root_key = window.location.hash.slice(1);
-				if (!is_valid_key_fragment(root_key)) throw new Error(INVALID_LINK);
-				const access_token = await get_access_token(root_key);
-				const available = await api.is_secret_available(
-					handle.props.contentId,
-					access_token,
-					signal
-				);
-				if (signal.aborted) return;
-
-				availability = available ? 'available' : 'unavailable';
-				if (!available) error = messages.not_found;
-			} catch (cause) {
-				if (signal.aborted) return;
-				availability = 'unavailable';
-				error = consume_error_message(cause, messages);
-			}
-
-			handle.update();
-		});
-
 		async function reveal_secret() {
-			if (availability !== 'available' || loading || data) return;
+			if (unavailable || loading || data) return;
 
 			error = null;
 			loading = true;
@@ -68,6 +45,9 @@ export const SecretViewer = clientEntry(
 				data = await decrypt_secret(payload.ciphertext, root_key, handle.props.contentId);
 			} catch (cause) {
 				error = consume_error_message(cause, messages);
+				unavailable =
+					(cause instanceof Error && cause.message === INVALID_LINK) ||
+					(cause instanceof ApiError && cause.code === 'SECRET_NOT_FOUND');
 			} finally {
 				loading = false;
 				handle.update();
@@ -88,26 +68,36 @@ export const SecretViewer = clientEntry(
 			handle.update();
 		}
 
-		return () => (
-			<section class="stack-small" aria-live="polite">
-				<div class="field">
-					<label htmlFor="secret-output">{messages.output_label}</label>
-					<div class={`secret-output${data ? '' : ' secret-output-concealed'}`}>
-						<textarea
-							id="secret-output"
-							rows={10}
-							readOnly
-							class="text-area"
-							value={data ?? ''}
-						></textarea>
-						{data ? null : (
-							<div class="reveal-overlay">
-								{availability === 'checking' ? (
-									<div class="loading">
-										<span class="spinner" aria-hidden="true"></span>
-										<span>{messages.checking}</span>
-									</div>
-								) : availability === 'available' ? (
+		return () => {
+			if (unavailable) {
+				return (
+					<section class="empty-state" aria-live="polite">
+						<p class="error" role="alert">
+							{error}
+						</p>
+						<div class="actions">
+							<a href="/" class="button button-secondary">
+								{messages.new_secret}
+							</a>
+						</div>
+					</section>
+				);
+			}
+
+			return (
+				<section class="stack-small" aria-live="polite">
+					<div class="field">
+						<label htmlFor="secret-output">{messages.output_label}</label>
+						<div class={`secret-output${data ? '' : ' secret-output-concealed'}`}>
+							<textarea
+								id="secret-output"
+								rows={10}
+								readOnly
+								class="text-area"
+								value={data ?? ''}
+							></textarea>
+							{data ? null : (
+								<div class="reveal-overlay">
 									<button
 										type="button"
 										class="button button-primary"
@@ -116,33 +106,33 @@ export const SecretViewer = clientEntry(
 									>
 										{loading ? messages.loading : messages.reveal_secret}
 									</button>
-								) : null}
-							</div>
-						)}
+								</div>
+							)}
+						</div>
 					</div>
-				</div>
 
-				{error ? (
-					<p class="error" role="alert">
-						{error}
-					</p>
-				) : null}
+					{error ? (
+						<p class="error" role="alert">
+							{error}
+						</p>
+					) : null}
 
-				<div class="actions secret-actions">
-					<a href="/" class="button button-secondary">
-						{messages.new_secret}
-					</a>
-					<button
-						type="button"
-						class="button button-primary"
-						disabled={!data}
-						mix={on('click', copy_secret)}
-					>
-						{copied ? messages.copied : messages.copy_secret}
-					</button>
-				</div>
-			</section>
-		);
+					<div class="actions secret-actions">
+						<a href="/" class="button button-secondary">
+							{messages.new_secret}
+						</a>
+						<button
+							type="button"
+							class="button button-primary"
+							disabled={!data}
+							mix={on('click', copy_secret)}
+						>
+							{copied ? messages.copied : messages.copy_secret}
+						</button>
+					</div>
+				</section>
+			);
+		};
 	}
 );
 

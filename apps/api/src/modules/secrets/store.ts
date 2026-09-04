@@ -1,5 +1,7 @@
 import { and, eq, gt, lt, or } from 'drizzle-orm';
 
+import type { SecretStatus } from '@sendenv/sdk/protocol';
+
 import { db } from '../../db/index.ts';
 import { secrets } from '../../db/schema.ts';
 
@@ -12,7 +14,7 @@ export interface NewSecret {
 
 export interface SecretStore {
 	create(secret: NewSecret): Promise<boolean>;
-	available(contentId: string, accessVerifier: Buffer, now: Date): Promise<boolean>;
+	status(contentId: string, now: Date): Promise<SecretStatus>;
 	consume(contentId: string, accessVerifier: Buffer, now: Date): Promise<string | null>;
 	cleanup(now: Date): Promise<number>;
 }
@@ -41,21 +43,17 @@ export const secretStore: SecretStore = {
 		}
 	},
 
-	async available(contentId, accessVerifier, now) {
+	async status(contentId, now) {
 		const [secret] = await db
-			.select({ contentId: secrets.content_id })
+			.select({ accessed: secrets.accessed, expiresAt: secrets.expires_at })
 			.from(secrets)
-			.where(
-				and(
-					eq(secrets.content_id, contentId),
-					eq(secrets.access_verifier, accessVerifier),
-					eq(secrets.accessed, false),
-					gt(secrets.expires_at, now)
-				)
-			)
+			.where(eq(secrets.content_id, contentId))
 			.limit(1);
 
-		return secret !== undefined;
+		if (!secret) return 'missing';
+		if (secret.accessed) return 'consumed';
+		if (secret.expiresAt <= now) return 'expired';
+		return 'available';
 	},
 
 	async consume(contentId, accessVerifier, now) {

@@ -291,22 +291,6 @@ h1 {
 	color: #111827;
 }
 
-.loading {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	color: #4b5563;
-}
-
-.spinner {
-	width: 1rem;
-	height: 1rem;
-	border: 2px solid #d1d5db;
-	border-top-color: #111827;
-	border-radius: 999px;
-	animation: spin 0.8s linear infinite;
-}
-
 .error {
 	margin: 0;
 	color: #dc2626;
@@ -366,17 +350,7 @@ noscript {
 	}
 }
 
-@keyframes spin {
-	to {
-		transform: rotate(360deg);
-	}
-}
-
 @media (prefers-reduced-motion: reduce) {
-	.spinner {
-		animation: none;
-	}
-
 	.button {
 		transition: none;
 	}
