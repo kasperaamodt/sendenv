@@ -44,6 +44,21 @@ export function create_api_client(base_url: string) {
 
 			if (!response.ok) throw await to_api_error(response);
 			return (await response.json()) as ConsumeSecretResponse;
+		},
+
+		async is_secret_available(content_id: string, access_token: string, signal?: AbortSignal) {
+			const response = await fetch(`${base}/v1/secrets/${encodeURIComponent(content_id)}`, {
+				method: 'HEAD',
+				headers: { Authorization: `Bearer ${access_token}` },
+				signal
+			});
+
+			if (response.ok) return true;
+			if (response.status === 404) return false;
+			if (response.status === 429) {
+				throw new ApiError('Too many requests. Try again later.', 429, 'RATE_LIMITED');
+			}
+			throw await to_api_error(response);
 		}
 	};
 }

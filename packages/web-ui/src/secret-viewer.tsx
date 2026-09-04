@@ -26,16 +26,34 @@ export const SecretViewer = clientEntry(
 		let copied = false;
 		let data: string | null = null;
 		let error: string | null = null;
-		let hydrated = false;
+		let availability: 'checking' | 'available' | 'unavailable' = 'checking';
 		let loading = false;
 
-		handle.queueTask(() => {
-			hydrated = true;
+		handle.queueTask(async (signal) => {
+			try {
+				const root_key = window.location.hash.slice(1);
+				if (!is_valid_key_fragment(root_key)) throw new Error(INVALID_LINK);
+				const access_token = await get_access_token(root_key);
+				const available = await api.is_secret_available(
+					handle.props.contentId,
+					access_token,
+					signal
+				);
+				if (signal.aborted) return;
+
+				availability = available ? 'available' : 'unavailable';
+				if (!available) error = messages.not_found;
+			} catch (cause) {
+				if (signal.aborted) return;
+				availability = 'unavailable';
+				error = consume_error_message(cause, messages);
+			}
+
 			handle.update();
 		});
 
 		async function reveal_secret() {
-			if (!hydrated || loading || data) return;
+			if (availability !== 'available' || loading || data) return;
 
 			error = null;
 			loading = true;
@@ -84,14 +102,21 @@ export const SecretViewer = clientEntry(
 						></textarea>
 						{data ? null : (
 							<div class="reveal-overlay">
-								<button
-									type="button"
-									class="button button-primary"
-									disabled={!hydrated || loading}
-									mix={on('click', () => reveal_secret())}
-								>
-									{loading ? messages.loading : messages.reveal_secret}
-								</button>
+								{availability === 'checking' ? (
+									<div class="loading">
+										<span class="spinner" aria-hidden="true"></span>
+										<span>{messages.checking}</span>
+									</div>
+								) : availability === 'available' ? (
+									<button
+										type="button"
+										class="button button-primary"
+										disabled={loading}
+										mix={on('click', () => reveal_secret())}
+									>
+										{loading ? messages.loading : messages.reveal_secret}
+									</button>
+								) : null}
 							</div>
 						)}
 					</div>
