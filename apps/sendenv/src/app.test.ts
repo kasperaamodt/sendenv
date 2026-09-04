@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { render } from 'svelte/server';
 
 import Header from '$lib/Header.svelte';
+import { get_api_base_url } from '$lib/server/api';
 import { handle } from './hooks.server';
 import HomePage from './routes/+page.svelte';
 import SecretPage from './routes/s/[id]/+page.svelte';
@@ -9,7 +10,6 @@ import { load as load_secret } from './routes/s/[id]/+page.server';
 import { GET as health } from './routes/health/+server';
 
 const apiBaseUrl = 'https://api.sendenv.test';
-const developmentApiBaseUrl = 'http://localhost:3000';
 const contentId = 'abcdef123456abcdef123456abcdef12';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -48,7 +48,7 @@ describe('Sendenv frontend', () => {
 			'Cache-Control': 'no-store',
 			'X-Robots-Tag': 'noindex, nofollow, noarchive'
 		});
-		expect(fetch_mock).toHaveBeenCalledWith(`${developmentApiBaseUrl}/v1/secrets/${contentId}`, {
+		expect(fetch_mock).toHaveBeenCalledWith(`${get_api_base_url()}/v1/secrets/${contentId}`, {
 			method: 'GET',
 			headers: { Accept: 'application/json' },
 			signal: undefined
