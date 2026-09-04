@@ -4,15 +4,26 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "NODE_ENV=development PORT=3002 API_URL=http://localhost:3000 bun --watch server.ts",
-		"start": "NODE_ENV=production bun server.ts",
-		"build": "bun run check",
-		"check": "tsc --noEmit -p tsconfig.json",
-		"test": "bun test"
+		"dev": "vite dev --host 0.0.0.0 --port 3002",
+		"start": "node build",
+		"build": "vite build",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"test": "vitest run",
+		"prepare": "svelte-kit sync"
 	},
 	"dependencies": {
 		"@sendenv/sdk": "workspace:*",
 		"@sendenv/web-ui": "workspace:*",
-		"remix": "3.0.0-rc.1"
+		"@stylexjs/stylex": "0.19.0"
+	},
+	"devDependencies": {
+		"@stylexjs/unplugin": "0.19.0",
+		"@sveltejs/adapter-node": "5.5.7",
+		"@sveltejs/kit": "2.70.3",
+		"@sveltejs/vite-plugin-svelte": "7.3.0",
+		"svelte": "5.57.0",
+		"svelte-check": "4.7.6",
+		"vite": "8.2.2",
+		"vitest": "5.0.0"
 	}
 }

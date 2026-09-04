@@ -1,7 +1,9 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
-		"types": ["bun"]
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"types": ["svelte"]
 	},
-	"include": ["src/**/*.ts", "src/**/*.tsx"]
+	"include": ["src/**/*.ts", "src/**/*.svelte"]
 }

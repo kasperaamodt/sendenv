@@ -2,8 +2,8 @@ node_modules
 **/node_modules
 .turbo
 **/.turbo
-build
-.svelte-kit
+**/build
+**/.svelte-kit
 .env
 .env.*
 *.log

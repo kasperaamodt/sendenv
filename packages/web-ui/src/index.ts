@@ -1,3 +1,4 @@
-export { CreateSecret } from './create-secret.tsx';
-export type { CreateSecretMessages, SecretViewerMessages } from './messages.ts';
-export { SecretViewer } from './secret-viewer.tsx';
+export { default as CreateSecret } from './CreateSecret.svelte';
+export type { CreateSecretMessages, SecretViewerMessages } from './messages';
+export { default as SecretViewer } from './SecretViewer.svelte';
+export { uiStyles } from './styles';

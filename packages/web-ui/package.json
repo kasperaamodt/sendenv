@@ -3,15 +3,24 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
+	"svelte": "./src/index.ts",
 	"exports": {
-		".": "./src/index.ts"
+		".": {
+			"types": "./src/index.ts",
+			"svelte": "./src/index.ts",
+			"default": "./src/index.ts"
+		},
+		"./global.css": "./src/app.css"
 	},
 	"scripts": {
-		"build": "bun run check",
-		"check": "tsc --noEmit -p tsconfig.json"
+		"check": "svelte-check --tsconfig ./tsconfig.json"
 	},
 	"dependencies": {
 		"@sendenv/sdk": "workspace:*",
-		"remix": "3.0.0-rc.1"
+		"@stylexjs/stylex": "0.19.0"
+	},
+	"devDependencies": {
+		"svelte": "5.57.0",
+		"svelte-check": "4.7.6"
 	}
 }

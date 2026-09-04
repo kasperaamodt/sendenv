@@ -1,10 +1,8 @@
-import type { SerializableProps } from 'remix/ui';
-
 import type { ExpirationHours } from '@sendenv/sdk';
 
-type ExpirationOptions = Record<ExpirationHours, string> & SerializableProps;
+type ExpirationOptions = Record<ExpirationHours, string>;
 
-export interface CreateSecretMessages extends SerializableProps {
+export interface CreateSecretMessages {
 	aria_label: string;
 	copy_failed: string;
 	copied: string;
@@ -26,7 +24,7 @@ export interface CreateSecretMessages extends SerializableProps {
 	warning_text: string;
 }
 
-export interface SecretViewerMessages extends SerializableProps {
+export interface SecretViewerMessages {
 	copy_failed: string;
 	copied: string;
 	copy_secret: string;

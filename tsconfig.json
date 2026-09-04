@@ -11,8 +11,6 @@
 		"verbatimModuleSyntax": true,
 		"isolatedModules": true,
 		"skipLibCheck": true,
-		"jsx": "react-jsx",
-		"jsxImportSource": "remix/ui",
 		"noEmit": true
 	},
 	"exclude": ["node_modules"]

@@ -15,11 +15,11 @@ This is a Bun workspace orchestrated by Turborepo.
 ```text
 apps/
   api/          Elysia API, OpenAPI, Drizzle, MySQL and Redis
-  sendenv/      Developer-focused Remix frontend
-  hvisk/        Norwegian consumer-facing Remix frontend
+  sendenv/      Developer-focused SvelteKit frontend
+  hvisk/        Norwegian consumer-facing SvelteKit frontend
 packages/
   sdk/          Browser-safe encryption protocol, contracts and HTTP client
-  web-ui/       Shared frontend components, styles and copy contracts
+  web-ui/       Shared Svelte 5 components, StyleX styles and copy contracts
 ```
 
 ## Development
@@ -88,6 +88,7 @@ API v1 accepts payloads produced by encryption protocol v1.
 
 ```text
 POST /v1/secrets
+GET  /v1/secrets/:contentId
 POST /v1/secrets/:contentId/consume
 GET  /health
 GET  /openapi
