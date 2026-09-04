@@ -40,7 +40,7 @@ export function Document(handle: Handle<DocumentProps>) {
 						type="font/woff2"
 						crossOrigin="anonymous"
 					/>
-					<link rel="stylesheet" href={stylesheetHref} />
+					<link rel="stylesheet" href={stylesheetHref} data-rmx-key="app-styles" />
 				</head>
 				<body>
 					<Header />

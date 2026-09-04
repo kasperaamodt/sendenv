@@ -8,7 +8,7 @@ export function Header(handle: Handle<HeaderProps>) {
 	return () => (
 		<header class="site-header">
 			<a href="/" class="logo-link" aria-label="Sendenv home">
-				<img src="/logo.svg" alt="" class="logo" />
+				<img src="/logo.svg" alt="" width="127" height="30" class="logo" />
 			</a>
 
 			<nav class="site-nav" aria-label="Primary navigation">

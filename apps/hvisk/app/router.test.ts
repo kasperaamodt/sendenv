@@ -38,8 +38,11 @@ describe('Hvisk frontend', () => {
 
 	test('serves its homepage', async () => {
 		const response = await router.fetch(new Request('http://localhost/'));
+		const html = await response.text();
 
 		expect(response.status).toBe(200);
+		expect(html).toContain('data-rmx-key="app-styles"');
+		expect(html).toContain('width="88" height="30" class="logo"');
 	});
 
 	test('answers homepage HEAD requests without rendering a body', async () => {
