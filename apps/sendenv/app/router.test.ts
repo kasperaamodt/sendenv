@@ -38,6 +38,8 @@ describe('Sendenv frontend', () => {
 		expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow, noarchive');
 		expect(html).toContain('Create a new secret');
 		expect(html).toContain('Reveal secret');
+		expect(html).toContain('secret-output-concealed');
+		expect(html).toContain('secret-actions');
 		expect(html).toContain('button button-secondary');
 	});
 

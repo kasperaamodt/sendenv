@@ -35,6 +35,7 @@ export const secret_viewer_messages = {
 	generic_error: 'Kunne ikke åpne innholdet.',
 	invalid_link: 'Lenken er ugyldig.',
 	loading: 'Åpner innholdet …',
+	new_secret: 'Del noe nytt',
 	not_found: 'Innholdet finnes ikke, har utløpt eller er allerede åpnet.',
 	output_label: 'Innhold',
 	rate_limited: 'For mange forsøk. Vent litt og prøv igjen.',

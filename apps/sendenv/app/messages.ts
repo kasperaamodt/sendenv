@@ -35,6 +35,7 @@ export const secret_viewer_messages = {
 	generic_error: 'Could not open the secret.',
 	invalid_link: 'The link is invalid.',
 	loading: 'Decrypting…',
+	new_secret: 'Create a new secret',
 	not_found: 'The secret does not exist, has expired, or has already been opened.',
 	output_label: 'Shared secret',
 	rate_limited: 'Too many attempts. Wait a moment and try again.',

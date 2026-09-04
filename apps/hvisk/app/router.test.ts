@@ -38,6 +38,8 @@ describe('Hvisk frontend', () => {
 		expect(response.headers.get('x-robots-tag')).toBe('noindex, nofollow, noarchive');
 		expect(html).toContain('Del noe nytt');
 		expect(html).toContain('Vis innholdet');
+		expect(html).toContain('secret-output-concealed');
+		expect(html).toContain('secret-actions');
 		expect(html).toContain('button button-secondary');
 	});
 
